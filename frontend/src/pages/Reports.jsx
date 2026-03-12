@@ -42,14 +42,16 @@ const Reports = () => {
         }
     };
 
+    const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+
     const handleGenerate = () => {
         setIsLoading(true);
         setTimeout(() => {
             setIsLoading(false);
             if (reportType === 'attendance') {
-                window.open('http://localhost:5000/api/reports/attendance/pdf', '_blank');
+                window.open(`${API_BASE}/api/reports/attendance/pdf`, '_blank');
             } else if (reportType === 'payroll') {
-                window.open('http://localhost:5000/api/reports/payroll/pdf', '_blank');
+                window.open(`${API_BASE}/api/reports/payroll/pdf`, '_blank');
             }
         }, 1500);
     };
@@ -140,7 +142,7 @@ const Reports = () => {
                                                 {report.attachmentFiles?.length > 0 && (
                                                     <div className="flex flex-wrap gap-2 mt-3">
                                                         {report.attachmentFiles.map((file, i) => (
-                                                            <a key={i} href={`http://localhost:5000${file}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 rounded-lg text-xs font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-colors border border-slate-700/50">
+                                                            <a key={i} href={`${API_BASE}${file}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 rounded-lg text-xs font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-colors border border-slate-700/50">
                                                                 <Download size={14} /> Attachment {i + 1}
                                                             </a>
                                                         ))}

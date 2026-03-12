@@ -4,17 +4,12 @@ import { useAuth } from '../context/AuthContext';
 import { Send, Search, Image as ImageIcon, Paperclip, MoreVertical, Hash } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Replace with actual backend URL in production
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
 const Chat = () => {
     const { user } = useAuth();
     const [socket, setSocket] = useState(null);
-    const [messages, setMessages] = useState([
-        { id: 1, text: 'Hey team, presentation is ready for tomorrow morning.', senderId: '2', senderName: 'Alice', time: '10:30 AM' },
-        { id: 2, text: 'Great! Can you share the link?', senderId: '3', senderName: 'Bob', time: '10:32 AM' },
-        { id: 3, text: 'Sure, here it is: example.com/presentation', senderId: '2', senderName: 'Alice', time: '10:35 AM' },
-    ]);
+    const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [activeChannel, setActiveChannel] = useState('general');
     const messagesEndRef = useRef(null);
@@ -65,16 +60,12 @@ const Chat = () => {
 
     const channels = [
         { id: 'general', name: 'General', unread: 0 },
-        { id: 'engineering', name: 'Engineering', unread: 3 },
+        { id: 'engineering', name: 'Engineering', unread: 0 },
         { id: 'design', name: 'Design', unread: 0 },
-        { id: 'announcements', name: 'Announcements', unread: 1 },
+        { id: 'announcements', name: 'Announcements', unread: 0 },
     ];
 
-    const onlineUsers = [
-        { id: '1', name: 'John Doe', status: 'online' },
-        { id: '2', name: 'Alice Smith', status: 'online' },
-        { id: '3', name: 'Bob Jones', status: 'away' },
-    ];
+    const onlineUsers = [];
 
     return (
         <div className="h-[calc(100vh-8rem)] flex flex-col md:flex-row gap-6 animate-in fade-in duration-500">
@@ -104,8 +95,8 @@ const Chat = () => {
                                         key={channel.id}
                                         onClick={() => setActiveChannel(channel.id)}
                                         className={`w-full flex items-center justify-between p-2 rounded-lg transition-colors ${activeChannel === channel.id
-                                                ? 'bg-indigo-500/20 text-indigo-300'
-                                                : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+                                            ? 'bg-indigo-500/20 text-indigo-300'
+                                            : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
                                             }`}
                                     >
                                         <div className="flex items-center gap-2 font-medium">
@@ -197,8 +188,8 @@ const Chat = () => {
                                     {!showHeader && !isMe && <div className="w-8 shrink-0" />}
 
                                     <div className={`px-4 py-3 rounded-2xl shadow-sm relative ${isMe
-                                            ? 'bg-indigo-600 text-white rounded-br-sm'
-                                            : 'bg-slate-800 text-slate-200 border border-slate-700/50 rounded-bl-sm'
+                                        ? 'bg-indigo-600 text-white rounded-br-sm'
+                                        : 'bg-slate-800 text-slate-200 border border-slate-700/50 rounded-bl-sm'
                                         }`}>
                                         <p className="text-sm leading-relaxed">{msg.text}</p>
 

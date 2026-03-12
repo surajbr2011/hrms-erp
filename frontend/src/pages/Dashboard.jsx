@@ -125,10 +125,10 @@ const Dashboard = () => {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                    { label: 'Attendance', value: '98%', icon: CalendarIcon, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-                    { label: 'Leave Balance', value: '12 Days', icon: Briefcase, color: 'text-violet-400', bg: 'bg-violet-400/10' },
-                    { label: 'Completed Tasks', value: '34', icon: CheckCircle2, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
-                    { label: 'Pending Approvals', value: '3', icon: Clock, color: 'text-amber-400', bg: 'bg-amber-400/10' }
+                    { label: 'Attendance', value: '—', icon: CalendarIcon, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+                    { label: 'Leave Balance', value: '—', icon: Briefcase, color: 'text-violet-400', bg: 'bg-violet-400/10' },
+                    { label: 'Completed Tasks', value: '0', icon: CheckCircle2, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
+                    { label: 'Pending Approvals', value: '0', icon: Clock, color: 'text-amber-400', bg: 'bg-amber-400/10' }
                 ].map((stat, i) => (
                     <motion.div
                         key={i}
@@ -174,12 +174,9 @@ const Dashboard = () => {
                                 </tr>
                             </thead>
                             <tbody className="text-sm">
-                                {[
-                                    { name: 'Update Dashboard UI', project: 'Trinix HRMS', date: 'Oct 24, 2024', priority: 'High', status: 'In Progress', statusColor: 'bg-blue-500/20 text-blue-400', priorityColor: 'text-red-400 bg-red-400/10' },
-                                    { name: 'Database Migration', project: 'Infrastructure', date: 'Oct 25, 2024', priority: 'Critical', status: 'Pending', statusColor: 'bg-slate-700/50 text-slate-300', priorityColor: 'text-red-500 bg-red-500/10' },
-                                    { name: 'API Documentation', project: 'Core Engine', date: 'Oct 28, 2024', priority: 'Medium', status: 'Completed', statusColor: 'bg-emerald-500/20 text-emerald-400', priorityColor: 'text-amber-400 bg-amber-400/10' },
-                                    { name: 'Client Presentation', project: 'Marketing', date: 'Nov 02, 2024', priority: 'Low', status: 'In Progress', statusColor: 'bg-blue-500/20 text-blue-400', priorityColor: 'text-emerald-400 bg-emerald-400/10' },
-                                ].map((task, i) => (
+                                {[].length === 0 ? (
+                                    <tr><td colSpan="5" className="py-10 text-center text-slate-500">No tasks yet.</td></tr>
+                                ) : [].map((task, i) => (
                                     <tr key={i} className="border-b border-slate-800 hover:bg-slate-800/40 transition-colors">
                                         <td className="py-4 pl-2 font-medium text-slate-200">{task.name}</td>
                                         <td className="py-4 text-slate-400">{task.project}</td>
@@ -208,11 +205,9 @@ const Dashboard = () => {
                     </div>
 
                     <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
-                        {[
-                            { title: 'Townhall Meeting', date: 'Today, 3:00 PM', desc: 'Quarterly review and Q&A session with the board.', type: 'event' },
-                            { title: 'System Maintenance', date: 'Tomorrow, 12:00 AM', desc: 'HRMS will be down for 2 hours for updates.', type: 'alert' },
-                            { title: 'New Leave Policy', date: 'Oct 20, 2024', desc: 'Please review the updated remote work guidelines.', type: 'info' }
-                        ].map((item, i) => (
+                        {[].length === 0 ? (
+                            <p className="text-slate-500 text-sm text-center pt-4">No announcements yet.</p>
+                        ) : [].map((item, i) => (
                             <div key={i} className="glass-card p-4 hover:border-indigo-500/40 rounded-xl bg-slate-900/40 border border-slate-700/50 relative overflow-hidden group">
                                 {/* Accent Border Block */}
                                 <div className={`absolute left-0 top-0 bottom-0 w-1 ${item.type === 'alert' ? 'bg-amber-500' : item.type === 'event' ? 'bg-violet-500' : 'bg-indigo-500'} group-hover:w-1.5 transition-all`} />

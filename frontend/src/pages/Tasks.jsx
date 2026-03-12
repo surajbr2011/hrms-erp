@@ -43,78 +43,27 @@ const Tasks = () => {
                     {/* Pending Column */}
                     <div className="glass-panel p-4 bg-slate-900/40 border-slate-800/60 min-h-[500px]">
                         <h3 className="text-lg font-bold text-slate-300 mb-4 flex justify-between">
-                            Pending <span className="bg-slate-800 text-slate-400 px-2 py-0.5 rounded text-xs">2</span>
+                            Pending <span className="bg-slate-800 text-slate-400 px-2 py-0.5 rounded text-xs">0</span>
                         </h3>
                         <div className="space-y-4">
-                            <motion.div layoutId="task1" className="glass-card p-4 border border-slate-700/50 hover:border-indigo-500/50 bg-slate-800/80 cursor-grab relative group">
-                                <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <MoreVertical size={16} className="text-slate-400" />
-                                </div>
-                                <div className="inline-block px-2 py-1 bg-red-500/10 text-red-500 rounded text-[10px] font-bold tracking-wider mb-2">CRITICAL</div>
-                                <h4 className="text-white font-semibold mb-2">Database Migration</h4>
-                                <p className="text-xs text-slate-400 leading-relaxed mb-4">Migrate legacy HR data to the new MongoDB schema.</p>
-
-                                <div className="flex justify-between items-center mt-4 pt-4 border-t border-slate-700/50">
-                                    <div className="flex -space-x-2">
-                                        <div className="w-6 h-6 rounded-full border-2 border-slate-800 bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white">AS</div>
-                                        <div className="w-6 h-6 rounded-full border-2 border-slate-800 bg-violet-500 flex items-center justify-center text-[10px] font-bold text-white">JD</div>
-                                    </div>
-                                    <div className="flex gap-2 text-slate-500 text-xs font-medium">
-                                        <span className="flex items-center gap-1"><MessageSquare size={12} /> 3</span>
-                                        <span className="flex items-center gap-1"><Paperclip size={12} /> 1</span>
-                                    </div>
-                                </div>
-                            </motion.div>
                         </div>
                     </div>
 
                     {/* In Progress Column */}
                     <div className="glass-panel p-4 bg-slate-900/40 border-slate-800/60 min-h-[500px]">
                         <h3 className="text-lg font-bold text-indigo-300 mb-4 flex justify-between">
-                            In Progress <span className="bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded text-xs">1</span>
+                            In Progress <span className="bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded text-xs">0</span>
                         </h3>
                         <div className="space-y-4">
-                            <motion.div layoutId="task2" className="glass-card p-4 border border-indigo-500/30 hover:border-indigo-500/50 bg-indigo-900/10 cursor-grab relative group">
-                                <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <MoreVertical size={16} className="text-slate-400" />
-                                </div>
-                                <div className="inline-block px-2 py-1 bg-amber-500/10 text-amber-500 rounded text-[10px] font-bold tracking-wider mb-2">MEDIUM</div>
-                                <h4 className="text-white font-semibold mb-2">Build Admin Dashboard</h4>
-                                <p className="text-xs text-slate-400 leading-relaxed mb-4">Implement employee management module in the admin side.</p>
-
-                                <div className="w-full h-1.5 bg-slate-800/80 rounded-full mt-2 mb-4 overflow-hidden">
-                                    <div className="h-full bg-indigo-500/80 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.5)]" style={{ width: '45%' }} />
-                                </div>
-
-                                <div className="flex justify-between items-center pt-2 border-t border-slate-700/50">
-                                    <div className="flex -space-x-2">
-                                        <div className="w-6 h-6 rounded-full border-2 border-slate-800 bg-pink-500 flex items-center justify-center text-[10px] font-bold text-white">DP</div>
-                                    </div>
-                                    <div className="flex items-center gap-1 text-xs font-medium text-slate-400 bg-slate-800 px-2 py-1 rounded">
-                                        <Clock size={12} className="text-indigo-400" /> Oct 24
-                                    </div>
-                                </div>
-                            </motion.div>
                         </div>
                     </div>
 
                     {/* Completed Column */}
                     <div className="glass-panel p-4 bg-slate-900/40 border-slate-800/60 min-h-[500px]">
                         <h3 className="text-lg font-bold text-emerald-400 mb-4 flex justify-between">
-                            Completed <span className="bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded text-xs">12</span>
+                            Completed <span className="bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded text-xs">0</span>
                         </h3>
                         <div className="space-y-4">
-                            <motion.div layoutId="task3" className="glass-card p-4 border border-emerald-500/20 hover:border-emerald-500/40 bg-emerald-900/5 cursor-grab relative group">
-                                <div className="inline-block px-2 py-1 bg-blue-500/10 text-blue-500 rounded text-[10px] font-bold tracking-wider mb-2">LOW</div>
-                                <h4 className="text-slate-300 font-semibold mb-2 line-through">API Documentation</h4>
-
-                                <div className="flex justify-between items-center mt-4">
-                                    <span className="flex items-center gap-1 text-emerald-500 text-xs font-bold"><CheckCircle2 size={14} /> Done</span>
-                                    <div className="flex gap-2 text-slate-500 text-xs font-medium">
-                                        <span className="flex items-center gap-1"><MessageSquare size={12} /> 8</span>
-                                    </div>
-                                </div>
-                            </motion.div>
                         </div>
                     </div>
 

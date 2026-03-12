@@ -9,13 +9,7 @@ const Team = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
 
-    const teamMembers = [
-        { id: 1, name: 'Alice Smith', email: 'alice@company.com', role: 'Manager', department: 'Engineering', status: 'Active', avatar: 'AS' },
-        { id: 2, name: 'Bob Jones', email: 'bob@company.com', role: 'Employee', department: 'Design', status: 'Active', avatar: 'BJ' },
-        { id: 3, name: 'Charlie Brown', email: 'charlie@company.com', role: 'Employee', department: 'Engineering', status: 'On Leave', avatar: 'CB' },
-        { id: 4, name: 'Diana Prince', email: 'diana@company.com', role: 'Admin', department: 'HR', status: 'Active', avatar: 'DP' },
-        { id: 5, name: 'Evan Wright', email: 'evan@company.com', role: 'Employee', department: 'Marketing', status: 'Inactive', avatar: 'EW' },
-    ];
+    const teamMembers = [];
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out">

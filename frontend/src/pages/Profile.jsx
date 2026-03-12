@@ -7,13 +7,13 @@ const Profile = () => {
     const { user } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const [profileData, setProfileData] = useState({
-        name: user?.name || 'Jane Doe',
-        email: user?.email || 'jane.doe@company.com',
-        phone: '+1 (555) 123-4567',
-        address: '123 Tech Lane, Innovation City, CA 94043',
-        department: 'Engineering',
-        role: user?.role || 'Employee',
-        joinDate: 'Oct 15, 2022',
+        name: user?.name || '',
+        email: user?.email || '',
+        phone: '',
+        address: '',
+        department: '',
+        role: user?.role || '',
+        joinDate: '',
     });
 
     const handleSave = () => {
@@ -46,7 +46,7 @@ const Profile = () => {
                                 <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
                             ) : (
                                 <span className="text-5xl md:text-6xl font-bold text-white tracking-wider">
-                                    {profileData.name.split(' ').map(n => n[0]).join('')}
+                                    {profileData.name ? profileData.name.split(' ').map(n => n[0]).join('') : ''}
                                 </span>
                             )}
                         </div>

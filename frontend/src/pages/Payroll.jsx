@@ -9,10 +9,7 @@ const Payroll = () => {
     const [activeTab, setActiveTab] = useState('payslips'); // payslips, salary-management
     const [selectedYear, setSelectedYear] = useState('2024');
 
-    const payslips = [
-        { id: 10, month: 'October', year: 2024, amount: '$4,500.00', status: 'Paid', date: 'Oct 31, 2024' },
-        { id: 9, month: 'September', year: 2024, amount: '$4,500.00', status: 'Paid', date: 'Sep 30, 2024' }
-    ];
+    const payslips = [];
 
     // Salary Management State
     const [employees, setEmployees] = useState([]);
@@ -91,15 +88,15 @@ const Payroll = () => {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                             <div className="glass-card p-6 border-indigo-500/30 bg-indigo-900/10">
                                 <h3 className="text-slate-400 font-medium mb-1">Current Base Salary</h3>
-                                <p className="text-3xl font-bold text-white tracking-wide">$54,000</p>
+                                <p className="text-3xl font-bold text-white tracking-wide">$0</p>
                             </div>
                             <div className="glass-card p-6 border-emerald-500/30 bg-emerald-900/10">
                                 <h3 className="text-slate-400 font-medium mb-1">Last Paid Amount</h3>
-                                <p className="text-3xl font-bold text-white tracking-wide">$3,845.50</p>
+                                <p className="text-3xl font-bold text-white tracking-wide">$0.00</p>
                             </div>
                             <div className="glass-card p-6 border-violet-500/30 bg-violet-900/10">
                                 <h3 className="text-slate-400 font-medium mb-1">Tax Deductions (YTD)</h3>
-                                <p className="text-3xl font-bold text-white tracking-wide">$6,545.00</p>
+                                <p className="text-3xl font-bold text-white tracking-wide">$0.00</p>
                             </div>
                         </div>
 
