@@ -22,6 +22,9 @@ const createUser = async (req, res) => {
             return res.status(400).json({ message: 'User ID is already in use' });
         }
 
+        const mongoose = require('mongoose');
+        const getValidObjectId = (id) => id && mongoose.Types.ObjectId.isValid(id) ? id : undefined;
+
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -30,9 +33,9 @@ const createUser = async (req, res) => {
             email,
             password: hashedPassword,
             role: role || 'Employee',
-            department,
-            designation,
-            reportingManager,
+            department: getValidObjectId(department),
+            designation: getValidObjectId(designation),
+            reportingManager: getValidObjectId(reportingManager),
             gender,
             phone,
             userId,
@@ -93,13 +96,16 @@ const updateUser = async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
 
+        const mongoose = require('mongoose');
+        const getValidObjectId = (id) => id && mongoose.Types.ObjectId.isValid(id) ? id : undefined;
+
         if (user) {
             user.name = req.body.name || user.name;
             user.email = req.body.email || user.email;
             user.role = req.body.role || user.role;
-            user.department = req.body.department || user.department;
-            user.designation = req.body.designation || user.designation;
-            user.reportingManager = req.body.reportingManager || user.reportingManager;
+            if (req.body.department !== undefined) user.department = getValidObjectId(req.body.department);
+            if (req.body.designation !== undefined) user.designation = getValidObjectId(req.body.designation);
+            if (req.body.reportingManager !== undefined) user.reportingManager = getValidObjectId(req.body.reportingManager);
             user.status = req.body.status || user.status;
 
             const updatedUser = await user.save();
