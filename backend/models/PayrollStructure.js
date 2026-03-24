@@ -19,12 +19,11 @@ const payrollStructureSchema = new mongoose.Schema({
     netSalary: { type: Number },
 }, { timestamps: true });
 
-payrollStructureSchema.pre('save', function (next) {
+payrollStructureSchema.pre('save', function () {
     let hraAmount = (this.basicSalary * this.hraPercentage) / 100;
     let totalAllowances = this.allowances.reduce((acc, curr) => acc + curr.amount, 0) + hraAmount;
     let totalDeductions = this.deductions.reduce((acc, curr) => acc + curr.amount, 0);
     this.netSalary = this.basicSalary + totalAllowances - totalDeductions;
-    next();
 });
 
 module.exports = mongoose.model('PayrollStructure', payrollStructureSchema);
