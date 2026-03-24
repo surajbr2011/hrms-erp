@@ -2,13 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
 import { Send, Search, Image as ImageIcon, Paperclip, MoreVertical, Hash } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
 const Chat = () => {
     const { user } = useAuth();
-    const [socket, setSocket] = useState(null);
+    const socketRef = useRef(null);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [activeChannel, setActiveChannel] = useState('general');
@@ -17,7 +16,7 @@ const Chat = () => {
     useEffect(() => {
         // Connect to socket when component mounts
         const newSocket = io(SOCKET_URL);
-        setSocket(newSocket);
+        socketRef.current = newSocket;
 
         // Initial setup
         newSocket.on('connect', () => {
@@ -51,7 +50,7 @@ const Chat = () => {
         };
 
         // Emit socket event
-        socket?.emit('send_message', msgData);
+        socketRef.current?.emit('send_message', msgData);
 
         // Add locally immediately
         setMessages((prev) => [...prev, msgData]);
@@ -65,7 +64,23 @@ const Chat = () => {
         { id: 'announcements', name: 'Announcements', unread: 0 },
     ];
 
-    const onlineUsers = [];
+    const [onlineUsers, setOnlineUsers] = useState([]);
+
+    useEffect(() => {
+        import('../services/api').then(({ default: api }) => {
+            api.get('/users').then(res => {
+                // Filter out the current user, map them to chat format
+                setOnlineUsers(res.data.filter(u => u._id !== user?._id).map(u => ({
+                    id: u._id,
+                    name: u.name,
+                    status: 'online' // Simulated online for now
+                })));
+            }).catch(console.error);
+        });
+    }, [user]);
+
+    const activeChatName = channels.find(c => c.id === activeChannel)?.name || onlineUsers.find(u => u.id === activeChannel)?.name || activeChannel;
+    const isDirectMessage = !channels.some(c => c.id === activeChannel);
 
     return (
         <div className="h-[calc(100vh-8rem)] flex flex-col md:flex-row gap-6 animate-in fade-in duration-500">
@@ -121,11 +136,15 @@ const Chat = () => {
                                 {onlineUsers.map(u => (
                                     <button
                                         key={u.id}
-                                        className="w-full flex items-center gap-3 p-2 rounded-lg transition-colors text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
+                                        onClick={() => setActiveChannel(u.id)}
+                                        className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors ${activeChannel === u.id
+                                            ? 'bg-indigo-500/20 text-indigo-300'
+                                            : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+                                            }`}
                                     >
                                         <div className="relative">
-                                            <div className="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center font-bold text-xs text-white">
-                                                {u.name.substring(0, 2).toUpperCase()}
+                                            <div className="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center font-bold text-xs text-white uppercase shadow-md">
+                                                {u.name.substring(0, 2)}
                                             </div>
                                             <span className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-slate-800 ${u.status === 'online' ? 'bg-emerald-500' : 'bg-amber-500'
                                                 }`} />
@@ -144,13 +163,13 @@ const Chat = () => {
                 {/* Chat Header */}
                 <div className="p-4 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/40 shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center drop-shadow-md border border-indigo-500/30">
-                            <Hash size={20} />
+                        <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center drop-shadow-md border border-indigo-500/30 font-bold uppercase">
+                            {isDirectMessage ? activeChatName.substring(0, 2) : <Hash size={20} />}
                         </div>
                         <div>
-                            <h3 className="font-bold text-white text-lg capitalize">{activeChannel}</h3>
-                            <p className="text-xs text-emerald-400 font-medium flex items-center gap-1">
-                                <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse" /> 12 online
+                            <h3 className="font-bold text-white text-lg capitalize">{activeChatName}</h3>
+                            <p className="text-xs text-slate-400 flex items-center gap-1">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500" /> {isDirectMessage ? 'Online' : 'Active Channel'}
                             </p>
                         </div>
                     </div>
@@ -167,11 +186,9 @@ const Chat = () => {
                         const showHeader = idx === 0 || messages[idx - 1].senderId !== msg.senderId;
 
                         return (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
+                            <div
                                 key={msg.id}
-                                className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+                                className={`flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-200 ${isMe ? 'items-end' : 'items-start'}`}
                             >
                                 {showHeader && !isMe && (
                                     <span className="text-xs text-slate-500 font-medium mb-1 ml-1">{msg.senderName}</span>
@@ -199,7 +216,7 @@ const Chat = () => {
                                         </span>
                                     </div>
                                 </div>
-                            </motion.div>
+                            </div>
                         );
                     })}
                     <div ref={messagesEndRef} />
