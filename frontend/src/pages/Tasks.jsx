@@ -11,6 +11,8 @@ const Tasks = () => {
     const [tasks, setTasks] = useState([]);
     const [showAddModal, setShowAddModal] = useState(false);
 
+    const [openDropdownId, setOpenDropdownId] = useState(null);
+
     // Admin/Manager perspective
     const isAdmin = user?.role === 'Admin' || user?.role === 'Manager';
 
@@ -27,28 +29,80 @@ const Tasks = () => {
         fetchTasks();
     }, []);
 
+    const handleUpdateStatus = async (taskId, status) => {
+        try {
+            await api.put(`/tasks/${taskId}`, { status });
+            fetchTasks();
+            setOpenDropdownId(null);
+        } catch (error) {
+            console.error('Error updating task status:', error);
+            alert('Failed to update task status');
+        }
+    };
+
+    const handleDeleteTask = async (taskId) => {
+        if (window.confirm('Are you sure you want to delete this task?')) {
+            try {
+                await api.delete(`/tasks/${taskId}`);
+                fetchTasks();
+                setOpenDropdownId(null);
+            } catch (error) {
+                console.error('Error deleting task:', error);
+                alert('Failed to delete task');
+            }
+        }
+    };
+
     const pendingTasks = tasks.filter(t => t.status === 'Pending');
     const inProgressTasks = tasks.filter(t => t.status === 'In Progress');
     const completedTasks = tasks.filter(t => t.status === 'Completed');
 
     const TaskCard = ({ task }) => (
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-slate-800/80 p-4 rounded-xl border border-slate-700 hover:border-indigo-500/50 transition-all cursor-pointer shadow-lg">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-slate-800/80 p-4 rounded-xl border border-slate-700 hover:border-indigo-500/50 transition-all cursor-pointer shadow-lg relative">
             <div className="flex justify-between items-start mb-2">
                 <span className={`px-2 py-0.5 rounded text-xs font-semibold ${task.priority === 'High' ? 'bg-rose-500/20 text-rose-400' : task.priority === 'Medium' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'}`}>
                     {task.priority || 'Medium'}
                 </span>
-                <button className="text-slate-500 hover:text-slate-300"><MoreVertical size={16} /></button>
+                
+                <div className="relative">
+                    <button 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenDropdownId(openDropdownId === task._id ? null : task._id);
+                        }} 
+                        className="text-slate-500 hover:text-slate-300 p-1"
+                    >
+                        <MoreVertical size={16} />
+                    </button>
+                    
+                    {openDropdownId === task._id && (
+                        <div className="absolute right-0 top-6 w-36 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-10 overflow-hidden text-sm">
+                            {task.status !== 'In Progress' && task.status !== 'Completed' && (
+                                <button onClick={() => handleUpdateStatus(task._id, 'In Progress')} className="w-full text-left px-4 py-2 text-indigo-400 hover:bg-slate-700 transition-colors">Mark In Progress</button>
+                            )}
+                            {task.status !== 'Completed' && (
+                                <button onClick={() => handleUpdateStatus(task._id, 'Completed')} className="w-full text-left px-4 py-2 text-emerald-400 hover:bg-slate-700 transition-colors">Mark Completed</button>
+                            )}
+                            {task.status !== 'Pending' && (
+                                <button onClick={() => handleUpdateStatus(task._id, 'Pending')} className="w-full text-left px-4 py-2 text-amber-400 hover:bg-slate-700 transition-colors">Mark Pending</button>
+                            )}
+                            {isAdmin && (
+                                <button onClick={() => handleDeleteTask(task._id)} className="w-full text-left px-4 py-2 text-rose-400 hover:bg-slate-700 transition-colors border-t border-slate-700/50">Delete Task</button>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
             <h4 className="text-white font-medium mb-1 leading-tight">{task.title}</h4>
             <div className="text-xs text-slate-400 mb-4 line-clamp-2">{task.description}</div>
             <div className="flex justify-between items-center pt-3 border-t border-slate-700/50 border-dashed">
                 <div className="flex -space-x-2">
-                    <div className="w-6 h-6 rounded-full bg-indigo-500 text-white text-[10px] flex justify-center items-center border border-slate-800" title={task.assignedTo?.name}>
+                    <div className="w-6 h-6 rounded-full bg-indigo-500 text-white text-[10px] flex justify-center items-center border border-slate-800" title={task.assignedTo?.name || 'Unassigned'}>
                         {task.assignedTo?.name?.substring(0, 2).toUpperCase() || 'NA'}
                     </div>
                 </div>
                 <div className="text-xs flex items-center gap-1 text-slate-400 font-medium">
-                    <Clock size={12} className={new Date(task.dueDate) < new Date() ? 'text-red-400' : 'text-slate-500'} />
+                    <Clock size={12} className={new Date(task.dueDate) < new Date() && task.status !== 'Completed' ? 'text-rose-400' : 'text-slate-500'} />
                     {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                 </div>
             </div>

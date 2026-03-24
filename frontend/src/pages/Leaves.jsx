@@ -6,7 +6,7 @@ import api from '../services/api';
 
 const Leaves = () => {
     const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState('apply'); // apply, history, team, holidays
+    const [activeTab, setActiveTab] = useState(user?.role === 'Admin' ? 'team' : 'apply'); // apply, history, team, holidays
     const [holidays, setHolidays] = useState([]);
 
     // Apply leave states
@@ -70,14 +70,18 @@ const Leaves = () => {
             </div>
 
             <div className="flex space-x-2 border-b border-slate-700/50 pb-px mb-6 overflow-x-auto custom-scrollbar whitespace-nowrap">
-                <button onClick={() => setActiveTab('apply')} className={`px-4 py-2 font-medium text-sm transition-colors relative ${activeTab === 'apply' ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-300'}`}>
-                    Apply Leave
-                    {activeTab === 'apply' && <motion.div layoutId="activeTabL" className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-indigo-500 rounded-t" />}
-                </button>
-                <button onClick={() => setActiveTab('history')} className={`px-4 py-2 font-medium text-sm transition-colors relative ${activeTab === 'history' ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-300'}`}>
-                    My History
-                    {activeTab === 'history' && <motion.div layoutId="activeTabL" className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-indigo-500 rounded-t" />}
-                </button>
+                {user?.role !== 'Admin' && (
+                    <>
+                        <button onClick={() => setActiveTab('apply')} className={`px-4 py-2 font-medium text-sm transition-colors relative ${activeTab === 'apply' ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-300'}`}>
+                            Apply Leave
+                            {activeTab === 'apply' && <motion.div layoutId="activeTabL" className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-indigo-500 rounded-t" />}
+                        </button>
+                        <button onClick={() => setActiveTab('history')} className={`px-4 py-2 font-medium text-sm transition-colors relative ${activeTab === 'history' ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-300'}`}>
+                            My History
+                            {activeTab === 'history' && <motion.div layoutId="activeTabL" className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-indigo-500 rounded-t" />}
+                        </button>
+                    </>
+                )}
                 <button onClick={() => setActiveTab('holidays')} className={`px-4 py-2 font-medium text-sm transition-colors relative flex items-center gap-2 ${activeTab === 'holidays' ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-300'}`}>
                     <Calendar size={16} /> Holiday Calendar
                     {activeTab === 'holidays' && <motion.div layoutId="activeTabL" className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-indigo-500 rounded-t" />}
