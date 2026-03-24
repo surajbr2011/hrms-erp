@@ -52,6 +52,11 @@ const Dashboard = () => {
 
     const handleReportClose = () => {
         setShowReportModal(false);
+        // Do not check out here! They must submit the report to check out.
+    };
+
+    const handleCheckOutSuccess = () => {
+        setShowReportModal(false);
         setIsCheckedIn(false);
         setIsOnBreak(false);
     };
@@ -115,7 +120,7 @@ const Dashboard = () => {
                                     : 'bg-slate-700/50 text-slate-300 border-slate-600/50 hover:bg-slate-700'
                                     }`}
                             >
-                                <Coffee size={20} /> {isOnBreak ? 'Resume Work' : 'Take Break'}
+                                <Coffee size={20} /> {isOnBreak ? 'Resume Work' : 'Take Meal Break'}
                             </button>
                         )}
                     </div>
@@ -224,6 +229,7 @@ const Dashboard = () => {
             <DailyReportModal
                 isOpen={showReportModal}
                 onClose={handleReportClose}
+                onSuccess={handleCheckOutSuccess}
                 totalHours={workSeconds}
                 checkInTime={checkInTime}
             />

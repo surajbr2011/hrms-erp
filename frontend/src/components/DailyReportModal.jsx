@@ -3,7 +3,7 @@ import { X, Upload, File } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../services/api';
 
-const DailyReportModal = ({ isOpen, onClose, checkInTime, totalHours }) => {
+const DailyReportModal = ({ isOpen, onClose, onSuccess, checkInTime, totalHours }) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [workSummary, setWorkSummary] = useState('');
@@ -59,7 +59,7 @@ const DailyReportModal = ({ isOpen, onClose, checkInTime, totalHours }) => {
             });
 
             setLoading(false);
-            onClose(); // Reset and close
+            if (onSuccess) onSuccess();
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to submit report');
             setLoading(false);

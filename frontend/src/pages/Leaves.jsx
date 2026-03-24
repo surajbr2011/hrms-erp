@@ -10,7 +10,7 @@ const Leaves = () => {
     const [holidays, setHolidays] = useState([]);
 
     // Apply leave states
-    const [leaveType, setLeaveType] = useState('Annual Leave');
+    const [leaveType, setLeaveType] = useState('Casual Leave');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [reason, setReason] = useState('');
@@ -36,6 +36,11 @@ const Leaves = () => {
     const handleApply = async (e) => {
         e.preventDefault();
 
+        if (new Date(endDate) < new Date(startDate)) {
+            alert('End Date cannot be earlier than Start Date.');
+            return;
+        }
+
         // Prevent applying on holiday
         if (isDateHoliday(startDate) || isDateHoliday(endDate)) {
             alert('Cannot apply leave on a public holiday.');
@@ -54,11 +59,7 @@ const Leaves = () => {
     };
 
     const getLeaveTypes = () => {
-        let types = ['Annual Leave', 'Sick Leave', 'Casual Leave', 'Unpaid Leave', 'Earned Leave'];
-        if (user?.gender === 'Female') {
-            types.push('Period Leave');
-        }
-        return types;
+        return ['Casual Leave', 'Sick Leave', 'Earned Leave'];
     };
 
     return (

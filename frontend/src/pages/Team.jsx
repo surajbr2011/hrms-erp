@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Plus, Mail, MoreVertical, Shield } from 'lucide-react';
+import { Search, Filter, Plus, Mail, MoreVertical, Shield, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AddTeamMemberModal from '../components/AddTeamMemberModal';
 import api from '../services/api';
@@ -124,10 +124,25 @@ const Team = () => {
                                             </span>
                                         </td>
                                         <td className="py-4 pr-4">
-                                            <div className="flex items-center justify-center">
-                                                <button className="p-2 hover:bg-slate-700/50 rounded-lg text-slate-400 hover:text-white transition-colors">
-                                                    <MoreVertical size={18} />
-                                                </button>
+                                            <div className="flex items-center justify-center gap-2">
+                                                {(user?.role === 'Admin' || user?.role === 'Manager') && (
+                                                    <button 
+                                                        onClick={async () => {
+                                                            if(window.confirm(`Are you sure you want to remove ${member.name}?`)) {
+                                                                try {
+                                                                    await api.delete(`/users/${member._id}`);
+                                                                    fetchUsers();
+                                                                } catch(e) {
+                                                                    alert(e.response?.data?.message || 'Failed to delete member');
+                                                                }
+                                                            }
+                                                        }}
+                                                        className="p-2 hover:bg-red-500/20 rounded-lg text-slate-400 hover:text-red-400 transition-colors"
+                                                        title="Delete Member"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </motion.tr>
