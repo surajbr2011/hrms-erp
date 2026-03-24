@@ -16,21 +16,39 @@ const app = express();
 const server = http.createServer(app);
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
-const allowedOrigins = process.env.CLIENT_URL
-    ? process.env.CLIENT_URL.split(',').map((o) => o.trim())
-    : ['http://localhost:5173', 'http://localhost:3000'];
+// Always include base origins, then merge any extras from CLIENT_URL env var
+const BASE_ORIGINS = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://spontaneous-cactus-3f64f7.netlify.app',
+];
 
-app.use(cors({
+const envOrigins = process.env.CLIENT_URL
+    ? process.env.CLIENT_URL.split(',').map((o) => o.trim())
+    : [];
+
+const allowedOrigins = [...new Set([...BASE_ORIGINS, ...envOrigins])];
+
+const corsOptions = {
     origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, curl, etc.)
+        // Allow requests with no origin (mobile apps, curl, Render health checks)
         if (!origin) return callback(null, true);
+        // Allow any *.netlify.app deploy preview
+        if (/^https:\/\/[a-z0-9-]+\.netlify\.app$/.test(origin)) return callback(null, true);
         if (allowedOrigins.includes(origin)) return callback(null, true);
+        console.warn(`CORS blocked origin: ${origin}`);
         callback(new Error(`CORS blocked: ${origin}`));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+    optionsSuccessStatus: 200, // Some legacy browsers choke on 204
+};
+
+app.use(cors(corsOptions));
+
+// Explicitly handle OPTIONS preflight for all routes
+app.options('*', cors(corsOptions));
 
 // ─── Socket.io ───────────────────────────────────────────────────────────────
 const io = new Server(server, {
