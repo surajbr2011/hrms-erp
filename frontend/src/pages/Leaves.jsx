@@ -141,7 +141,7 @@ const Leaves = () => {
                                 <h3 className="font-semibold text-white mb-4">Leave Balances</h3>
                                 <div className="space-y-4">
                                     {[
-                                        { type: 'Annual', total: 20, used: 0, color: 'emerald' },
+                                        { type: 'Earned', total: 20, used: 0, color: 'emerald' },
                                         { type: 'Sick', total: 10, used: 0, color: 'rose' },
                                         { type: 'Casual', total: 5, used: 0, color: 'blue' }
                                     ].map(bal => (

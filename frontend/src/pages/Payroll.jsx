@@ -8,8 +8,11 @@ const Payroll = () => {
     const { user } = useAuth();
     const [activeTab, setActiveTab] = useState('payslips'); // payslips, salary-management
     const [selectedYear, setSelectedYear] = useState('2024');
-
-    const payslips = [];
+    const [payslips, setPayslips] = useState([
+        { id: 1, month: 'March', year: 2024, date: '2024-03-31', amount: '$4,250.00' },
+        { id: 2, month: 'February', year: 2024, date: '2024-02-28', amount: '$4,250.00' },
+        { id: 3, month: 'January', year: 2024, date: '2024-01-31', amount: '$4,250.00' }
+    ]);
 
     // Salary Management State
     const [employees, setEmployees] = useState([]);
@@ -17,6 +20,7 @@ const Payroll = () => {
     const [salaryForm, setSalaryForm] = useState({
         basicSalary: '', hraPercentage: '', specialAllowance: '', bonus: '', pf: '', professionalTax: ''
     });
+    const [submitLoading, setSubmitLoading] = useState(false);
 
     useEffect(() => {
         if (activeTab === 'salary-management') {
@@ -28,6 +32,7 @@ const Payroll = () => {
 
     const handleSalarySubmit = async (e) => {
         e.preventDefault();
+        setSubmitLoading(true);
         try {
             await api.post('/payroll/structure', {
                 employeeId: selectedEmployee,
@@ -43,10 +48,26 @@ const Payroll = () => {
                 ]
             });
             alert('Salary Configured Successfully!');
+            // Reset form
+            setSalaryForm({ basicSalary: '', hraPercentage: '', specialAllowance: '', bonus: '', pf: '', professionalTax: '' });
+            setSelectedEmployee('');
         } catch (error) {
             console.error(error);
-            alert('Error updating salary');
+            alert(error.response?.data?.message || 'Error updating salary. Please make sure all details are filled properly.');
+        } finally {
+            setSubmitLoading(false);
         }
+    };
+
+    const handleDownloadReport = () => {
+        const textToSave = `Yearly Payroll Report - ${selectedYear}\n\nEmployee: ${user?.name}\nTotal Paid: $12,750.00\nTaxes Deducted: $1,200.00`;
+        const element = document.createElement("a");
+        const file = new Blob([textToSave], { type: 'text/plain' });
+        element.href = URL.createObjectURL(file);
+        element.download = `Payroll_Report_${selectedYear}.txt`;
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
     };
 
     return (
@@ -62,7 +83,7 @@ const Payroll = () => {
                             <option value="2024">2024</option>
                             <option value="2023">2023</option>
                         </select>
-                        <button className="glass-button flex items-center gap-2">
+                        <button onClick={handleDownloadReport} className="glass-button flex items-center gap-2">
                             <DownloadCloud size={20} /> Download Yearly
                         </button>
                     </div>

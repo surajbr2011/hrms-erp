@@ -11,8 +11,10 @@ const Dashboard = () => {
 
     // Timer State
     const [isCheckedIn, setIsCheckedIn] = useState(false);
-    const [isOnBreak, setIsOnBreak] = useState(false);
+    const [breakType, setBreakType] = useState(null);
     const [workSeconds, setWorkSeconds] = useState(0);
+    const [breakSeconds, setBreakSeconds] = useState(0);
+    const [hasAlerted, setHasAlerted] = useState(false);
     const [showReportModal, setShowReportModal] = useState(false);
     const [checkInTime, setCheckInTime] = useState(null);
 
@@ -23,15 +25,31 @@ const Dashboard = () => {
 
     useEffect(() => {
         let interval = null;
-        if (isCheckedIn && !isOnBreak) {
+        if (isCheckedIn && !breakType) {
             interval = setInterval(() => {
                 setWorkSeconds(workSeconds => workSeconds + 1);
             }, 1000);
-        } else if (!isCheckedIn && workSeconds !== 0) {
+        } else if (isCheckedIn && breakType) {
+            interval = setInterval(() => {
+                setBreakSeconds(prev => {
+                    const newBreakSecs = prev + 1;
+                    if (!hasAlerted) {
+                        if (breakType === 'Meal' && newBreakSecs === 30 * 60) {
+                            alert("Your Meal Break limit (30 mins) has been reached. Please resume work.");
+                            setHasAlerted(true);
+                        } else if (breakType === 'Tea' && newBreakSecs === 15 * 60) {
+                            alert("Your Tea Break limit (15 mins) has been reached. Please resume work.");
+                            setHasAlerted(true);
+                        }
+                    }
+                    return newBreakSecs;
+                });
+            }, 1000);
+        } else if (!isCheckedIn && workSeconds !== 0 && !breakType) {
             clearInterval(interval);
         }
         return () => clearInterval(interval);
-    }, [isCheckedIn, isOnBreak]);
+    }, [isCheckedIn, breakType, hasAlerted, workSeconds]);
 
     const formatWorkTime = (totalSeconds) => {
         const hours = Math.floor(totalSeconds / 3600);
@@ -47,18 +65,31 @@ const Dashboard = () => {
             setIsCheckedIn(true);
             setCheckInTime(new Date());
             setWorkSeconds(0);
+            setBreakSeconds(0);
+            setHasAlerted(false);
         }
     };
 
     const handleReportClose = () => {
         setShowReportModal(false);
-        // Do not check out here! They must submit the report to check out.
     };
 
     const handleCheckOutSuccess = () => {
         setShowReportModal(false);
         setIsCheckedIn(false);
-        setIsOnBreak(false);
+        setBreakType(null);
+    };
+
+    const toggleBreak = (type) => {
+        if (breakType) {
+            // Resume work
+            setBreakType(null);
+            setBreakSeconds(0);
+            setHasAlerted(false);
+        } else {
+            // Start break
+            setBreakType(type);
+        }
     };
 
     const currentFormattedTime = format(currentTime, 'hh:mm:ss a');
@@ -97,9 +128,14 @@ const Dashboard = () => {
                         {currentFormattedTime}
                     </div>
 
-                    <div className="text-indigo-400 text-sm font-medium mb-2 font-mono">
+                    <div className="text-indigo-400 text-sm font-medium mb-1 font-mono">
                         Elapsed Time: {formatWorkTime(workSeconds)}
                     </div>
+                    {breakType && (
+                        <div className={`text-sm font-medium mb-2 font-mono ${hasAlerted ? 'text-red-400' : 'text-amber-400'}`}>
+                            {breakType} Break: {formatWorkTime(breakSeconds)}
+                        </div>
+                    )}
 
                     <div className="flex flex-col w-full gap-3 mt-4">
                         <button
@@ -112,15 +148,28 @@ const Dashboard = () => {
                             {isCheckedIn ? <><Square size={20} /> Check Out</> : <><Play size={20} fill="currentColor" /> Check In</>}
                         </button>
 
-                        {isCheckedIn && (
+                        {isCheckedIn && !breakType && (
+                            <div className="flex gap-2 w-full">
+                                <button
+                                    onClick={() => toggleBreak('Meal')}
+                                    className="w-1/2 py-3 rounded-xl font-bold transition-all duration-300 flex flex-col gap-1 items-center justify-center text-xs bg-slate-700/50 text-slate-300 border border-slate-600/50 hover:bg-slate-700"
+                                >
+                                    <Coffee size={18} /> Meal Break
+                                </button>
+                                <button
+                                    onClick={() => toggleBreak('Tea')}
+                                    className="w-1/2 py-3 rounded-xl font-bold transition-all duration-300 flex flex-col gap-1 items-center justify-center text-xs bg-slate-700/50 text-slate-300 border border-slate-600/50 hover:bg-slate-700"
+                                >
+                                    <Coffee size={18} /> Tea Break
+                                </button>
+                            </div>
+                        )}
+                        {isCheckedIn && breakType && (
                             <button
-                                onClick={() => setIsOnBreak(!isOnBreak)}
-                                className={`w-full py-3 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 border ${isOnBreak
-                                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/30 hover:bg-amber-500/30'
-                                    : 'bg-slate-700/50 text-slate-300 border-slate-600/50 hover:bg-slate-700'
-                                    }`}
+                                onClick={() => toggleBreak()}
+                                className="w-full py-3 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 border bg-amber-500/20 text-amber-400 border-amber-500/30 hover:bg-amber-500/30"
                             >
-                                <Coffee size={20} /> {isOnBreak ? 'Resume Work' : 'Take Meal Break'}
+                                <Coffee size={20} /> Resume Work
                             </button>
                         )}
                     </div>

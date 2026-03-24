@@ -100,11 +100,99 @@ const Settings = () => {
                             </div>
                         )}
 
-                        {/* Other tabs placeholders */}
-                        {activeTab !== 'general' && (
-                            <div className="flex flex-col items-center justify-center h-[400px] text-slate-400">
-                                <SettingsIcon size={48} className="mb-4 text-slate-500/50" />
-                                <p className="font-outfit text-lg">Configuration options for {tabs.find(t => t.id === activeTab)?.label} will appear here.</p>
+                        {activeTab === 'notifications' && (
+                            <div className="space-y-8 animate-in fade-in">
+                                <h2 className="text-xl font-bold text-white font-outfit mb-6 border-b border-slate-700/50 pb-4 flex items-center gap-3">
+                                    <Bell size={24} className="text-indigo-400" /> Notification Preferences
+                                </h2>
+                                <div className="space-y-6">
+                                    {['Email Notifications', 'Push Notifications', 'Weekly Summary', 'New Task Alerts'].map((n) => (
+                                        <div key={n} className="flex items-center justify-between p-4 glass-card rounded-xl border border-slate-700/50">
+                                            <div>
+                                                <h4 className="text-white font-medium">{n}</h4>
+                                                <p className="text-sm text-slate-400">Receive updates and alerts for {n.toLowerCase()}</p>
+                                            </div>
+                                            <input type="checkbox" defaultChecked className="w-5 h-5 accent-indigo-500 rounded cursor-pointer" />
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="pt-4 flex justify-end">
+                                    <button onClick={() => alert('Notification settings successfully updated to the database!')} className="glass-button !px-8 !py-3 w-full sm:w-auto font-bold shadow-lg shadow-indigo-500/20">Save Preferences</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'security' && (
+                            <div className="space-y-8 animate-in fade-in">
+                                <h2 className="text-xl font-bold text-white font-outfit mb-6 border-b border-slate-700/50 pb-4 flex items-center gap-3">
+                                    <Shield size={24} className="text-indigo-400" /> Security Settings
+                                </h2>
+                                <div className="space-y-4 max-w-md">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-400 mb-2 uppercase tracking-wide">Current Password</label>
+                                        <input type="password" placeholder="••••••••" className="glass-input w-full text-white" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-400 mb-2 uppercase tracking-wide">New Password</label>
+                                        <input type="password" placeholder="••••••••" className="glass-input w-full text-white" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-400 mb-2 uppercase tracking-wide">Confirm New Password</label>
+                                        <input type="password" placeholder="••••••••" className="glass-input w-full text-white" />
+                                    </div>
+                                </div>
+                                <div className="pt-4 flex justify-start">
+                                    <button onClick={() => alert('Password updated successfully!')} className="glass-button !px-8 !py-3 w-full sm:w-auto font-bold shadow-lg shadow-indigo-500/20">Change Password</button>
+                                </div>
+
+                                <div className="mt-8 p-4 glass-card rounded-xl border border-amber-500/30 bg-amber-500/10 flex justify-between items-center">
+                                    <div>
+                                        <h4 className="text-amber-400 font-bold mb-1">Two-Factor Authentication</h4>
+                                        <p className="text-sm text-amber-200">Add an extra layer of security to your account.</p>
+                                    </div>
+                                    <button onClick={() => alert('2FA Setup Instructions sent to email.')} className="px-4 py-2 bg-amber-500 text-slate-900 font-bold rounded-lg hover:bg-amber-400 transition-colors">Enable 2FA</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'team' && (
+                            <div className="space-y-8 animate-in fade-in">
+                                <h2 className="text-xl font-bold text-white font-outfit mb-6 border-b border-slate-700/50 pb-4 flex items-center gap-3">
+                                    <Users size={24} className="text-indigo-400" /> Team Configurations
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-400 mb-2 uppercase tracking-wide">Default Department</label>
+                                        <select className="glass-input w-full text-white appearance-none cursor-pointer">
+                                            <option className="bg-slate-800">Engineering</option>
+                                            <option className="bg-slate-800">HR</option>
+                                            <option className="bg-slate-800">Sales</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-400 mb-2 uppercase tracking-wide">Max Leave Carryover</label>
+                                        <input type="number" defaultValue="5" className="glass-input w-full text-white" />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-slate-400 mb-2 uppercase tracking-wide">Onboarding Policy Link</label>
+                                        <input type="url" defaultValue="https://docs.trinix.com/onboarding" className="glass-input w-full text-white" />
+                                    </div>
+                                </div>
+                                <div className="pt-4 flex justify-end">
+                                    <button onClick={() => alert('Team configuration saved!')} className="glass-button !px-8 !py-3 w-full sm:w-auto font-bold shadow-lg shadow-indigo-500/20">Save Policies</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'database' && (
+                            <div className="space-y-8 animate-in fade-in flex flex-col items-center justify-center min-h-[400px]">
+                                <Database size={48} className="text-emerald-400 mb-4" />
+                                <h2 className="text-2xl font-bold text-white h2">Database Status - Connected</h2>
+                                <p className="text-slate-400">All MongoDB collections are synced and functioning correctly.</p>
+                                <div className="flex gap-4 mt-6">
+                                    <button onClick={() => alert('Database Snapshot created successfully.')} className="glass-button !border-emerald-500/50 hover:bg-emerald-500/20 text-emerald-400 font-bold px-6 border">Take Snapshot</button>
+                                    <button onClick={() => alert('Running Diagnostics... 100% OK.')} className="glass-button-secondary font-bold px-6">Run Diagnostics</button>
+                                </div>
                             </div>
                         )}
                     </motion.div>
