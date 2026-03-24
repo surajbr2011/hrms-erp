@@ -1,15 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Filter, Plus, Mail, MoreVertical, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AddTeamMemberModal from '../components/AddTeamMemberModal';
+import api from '../services/api';
 
 const Team = () => {
     const { user } = useAuth();
     const [searchQuery, setSearchQuery] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
+    const [teamMembers, setTeamMembers] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const teamMembers = [];
+    const fetchUsers = async () => {
+        try {
+            const res = await api.get('/users');
+            setTeamMembers(res.data);
+        } catch (error) {
+            console.error('Failed to fetch team members:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchUsers();
+    }, []);
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out">
@@ -65,13 +81,13 @@ const Team = () => {
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: i * 0.05 }}
-                                        key={member.id}
+                                        key={member._id}
                                         className="border-b border-slate-800/60 hover:bg-slate-800/40 transition-colors"
                                     >
                                         <td className="py-4 pl-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500/80 to-violet-500/80 text-white font-bold flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/20">
-                                                    {member.avatar}
+                                                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500/80 to-violet-500/80 text-white font-bold flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/20 uppercase">
+                                                    {member.name.substring(0, 2)}
                                                 </div>
                                                 <div>
                                                     <p className="font-semibold text-white">{member.name}</p>
@@ -90,12 +106,12 @@ const Team = () => {
                                         </td>
                                         <td className="py-4">
                                             <div className="flex flex-col items-start gap-1">
-                                                <span className={`px-2.5 py-1 rounded-md text-xs font-semibold ${member.department === 'Engineering' ? 'bg-blue-500/10 text-blue-400' :
-                                                    member.department === 'Design' ? 'bg-pink-500/10 text-pink-400' :
-                                                        member.department === 'HR' ? 'bg-violet-500/10 text-violet-400' :
+                                                <span className={`px-2.5 py-1 rounded-md text-xs font-semibold ${member.department?.name === 'Engineering' ? 'bg-blue-500/10 text-blue-400' :
+                                                    member.department?.name === 'Design' ? 'bg-pink-500/10 text-pink-400' :
+                                                        member.department?.name === 'HR' ? 'bg-violet-500/10 text-violet-400' :
                                                             'bg-slate-700/50 text-slate-300'
                                                     }`}>
-                                                    {member.department}
+                                                    {member.department?.name || 'Unassigned'}
                                                 </span>
                                             </div>
                                         </td>
@@ -121,7 +137,7 @@ const Team = () => {
 
                     {teamMembers.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
                         <div className="text-center py-10 text-slate-400">
-                            No team members found matching "{searchQuery}"
+                            No team members found
                         </div>
                     )}
                 </div>
@@ -131,7 +147,7 @@ const Team = () => {
                 isOpen={showAddModal}
                 onClose={() => setShowAddModal(false)}
                 onUserAdded={() => {
-                    // Refresh logic if any
+                    fetchUsers();
                 }}
             />
         </div>
