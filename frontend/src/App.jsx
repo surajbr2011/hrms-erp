@@ -16,6 +16,7 @@ import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import Tasks from './pages/Tasks';
 import Reports from './pages/Reports';
+import Performance from './pages/Performance';
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
               <Route path="/chat" element={<Chat />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/performance" element={<Performance />} />
             </Route>
           </Route>
         </Routes>

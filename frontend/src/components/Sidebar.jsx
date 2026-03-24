@@ -10,7 +10,8 @@ import {
     LogOut,
     X,
     ClipboardList,
-    PieChart
+    PieChart,
+    TrendingUp
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -20,6 +21,7 @@ const Sidebar = ({ className, onClose }) => {
     const menuItems = [
         { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: ['Employee', 'Manager', 'Admin'] },
         { name: 'Team', path: '/team', icon: Users, roles: ['Manager', 'Admin'] },
+        { name: 'Performance', path: '/performance', icon: TrendingUp, roles: ['Employee', 'Manager', 'Admin'] },
         { name: 'Leaves', path: '/leaves', icon: Calendar, roles: ['Employee', 'Manager', 'Admin'] },
         { name: 'Tasks', path: '/tasks', icon: ClipboardList, roles: ['Employee', 'Manager', 'Admin'] },
         { name: 'Payroll', path: '/payroll', icon: CreditCard, roles: ['Admin', 'Manager', 'Employee'] },

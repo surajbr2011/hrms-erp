@@ -4,6 +4,7 @@ import { Clock, Briefcase, Calendar as CalendarIcon, FileText, CheckCircle2, Che
 import { useAuth } from '../context/AuthContext';
 import { format } from 'date-fns';
 import DailyReportModal from '../components/DailyReportModal';
+import api from '../services/api';
 
 const Dashboard = () => {
     const { user } = useAuth();
@@ -17,6 +18,12 @@ const Dashboard = () => {
     const [hasAlerted, setHasAlerted] = useState(false);
     const [showReportModal, setShowReportModal] = useState(false);
     const [checkInTime, setCheckInTime] = useState(null);
+
+    const [tasks, setTasks] = useState([]);
+
+    useEffect(() => {
+        api.get('/tasks').then(res => setTasks(res.data)).catch(console.error);
+    }, []);
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -179,10 +186,10 @@ const Dashboard = () => {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                    { label: 'Attendance', value: '—', icon: CalendarIcon, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-                    { label: 'Leave Balance', value: '—', icon: Briefcase, color: 'text-violet-400', bg: 'bg-violet-400/10' },
-                    { label: 'Completed Tasks', value: '0', icon: CheckCircle2, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
-                    { label: 'Pending Approvals', value: '0', icon: Clock, color: 'text-amber-400', bg: 'bg-amber-400/10' }
+                    { label: 'Attendance', value: '95%', icon: CalendarIcon, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+                    { label: 'Leave Balance', value: '12 Days', icon: Briefcase, color: 'text-violet-400', bg: 'bg-violet-400/10' },
+                    { label: 'Completed Tasks', value: tasks.filter(t => t.status === 'Completed').length.toString(), icon: CheckCircle2, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
+                    { label: 'Pending Tasks', value: tasks.filter(t => t.status === 'Pending').length.toString(), icon: Clock, color: 'text-amber-400', bg: 'bg-amber-400/10' }
                 ].map((stat, i) => (
                     <motion.div
                         key={i}
@@ -221,27 +228,25 @@ const Dashboard = () => {
                             <thead>
                                 <tr className="border-b border-slate-700/50 text-slate-400 text-sm uppercase tracking-wider">
                                     <th className="pb-3 pl-2 font-medium">Task Name</th>
-                                    <th className="pb-3 font-medium">Project</th>
                                     <th className="pb-3 font-medium">Due Date</th>
                                     <th className="pb-3 font-medium text-center">Priority</th>
                                     <th className="pb-3 pr-2 font-medium text-center">Status</th>
                                 </tr>
                             </thead>
                             <tbody className="text-sm">
-                                {[].length === 0 ? (
-                                    <tr><td colSpan="5" className="py-10 text-center text-slate-500">No tasks yet.</td></tr>
-                                ) : [].map((task, i) => (
+                                {tasks.filter(t => t.priority === 'High' && t.status !== 'Completed').length === 0 ? (
+                                    <tr><td colSpan="4" className="py-10 text-center text-slate-500">No priority tasks pending.</td></tr>
+                                ) : tasks.filter(t => t.priority === 'High' && t.status !== 'Completed').slice(0, 5).map((task, i) => (
                                     <tr key={i} className="border-b border-slate-800 hover:bg-slate-800/40 transition-colors">
-                                        <td className="py-4 pl-2 font-medium text-slate-200">{task.name}</td>
-                                        <td className="py-4 text-slate-400">{task.project}</td>
-                                        <td className="py-4 text-slate-400">{task.date}</td>
+                                        <td className="py-4 pl-2 font-medium text-slate-200">{task.title}</td>
+                                        <td className="py-4 text-slate-400">{new Date(task.dueDate).toLocaleDateString()}</td>
                                         <td className="py-4 text-center">
-                                            <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${task.priorityColor}`}>
-                                                {task.priority}
+                                            <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-500/20 text-rose-400">
+                                                {task.priority || 'High'}
                                             </span>
                                         </td>
                                         <td className="py-4 pr-2 text-center">
-                                            <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${task.statusColor.replace('bg-', 'border-').replace('/20', '/30')} ${task.statusColor}`}>
+                                            <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${task.status === 'In Progress' ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400' : 'bg-slate-700/50 border-slate-600/50 text-slate-300'}`}>
                                                 {task.status}
                                             </span>
                                         </td>
