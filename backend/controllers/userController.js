@@ -58,9 +58,9 @@ const createUser = async (req, res) => {
 const getUsers = async (req, res) => {
     try {
         let query = {};
-        if (req.user.role === 'Employee') {
+        if (req.user.role === 'Employee' && req.query.chat !== 'true') {
             query = { _id: req.user._id };
-        } else if (req.user.role === 'Manager') {
+        } else if (req.user.role === 'Manager' && req.query.chat !== 'true') {
             query = { $or: [{ role: 'Employee' }, { _id: req.user._id }] };
         }
 

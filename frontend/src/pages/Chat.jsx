@@ -121,7 +121,7 @@ const Chat = () => {
 
     useEffect(() => {
         import('../services/api').then(({ default: api }) => {
-            api.get('/users').then(res => {
+            api.get('/users?chat=true').then(res => {
                 // Filter out the current user, map them to chat format
                 setOnlineUsers(res.data.filter(u => u._id !== user?._id).map(u => ({
                     id: u._id,
