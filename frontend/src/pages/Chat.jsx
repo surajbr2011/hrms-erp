@@ -38,7 +38,8 @@ const Chat = () => {
         import('../services/api').then(({ default: api }) => {
             api.get(`/chat/${activeChannel}/messages`)
                 .then(res => {
-                    const mapped = res.data.map(m => ({
+                    const dataArray = Array.isArray(res.data) ? res.data : [];
+                    const mapped = dataArray.map(m => ({
                         id: m._id,
                         _id: m._id,
                         room: activeChannel,
@@ -49,7 +50,10 @@ const Chat = () => {
                     }));
                     setMessages(mapped);
                 })
-                .catch(err => console.error('Failed fetching chat history:', err));
+                .catch(err => {
+                    console.error('Failed fetching chat history:', err);
+                    setMessages([]);
+                });
         });
     }, [activeChannel]);
 
@@ -216,9 +220,10 @@ const Chat = () => {
                         const isMe = msg.senderId === (user?._id || '1');
                         const showHeader = idx === 0 || messages[idx - 1].senderId !== msg.senderId;
 
+                        const senderName = msg.senderName || 'Unknown';
                         return (
                             <div
-                                key={msg.id}
+                                key={msg.id || idx}
                                 className={`flex flex-col animate-in fade-in duration-200 hover:bg-white/5 py-1 px-2 rounded-md ${!showHeader ? 'mt-0' : 'mt-4'}`}
                             >
                                 <div className="flex items-start gap-3 w-full">
@@ -226,7 +231,7 @@ const Chat = () => {
                                     <div className="w-10 shrink-0 flex justify-center">
                                         {showHeader ? (
                                             <div className="w-9 h-9 rounded-full bg-indigo-600 shrink-0 text-white font-bold text-sm flex items-center justify-center shadow-sm">
-                                                {msg.senderName.charAt(0).toUpperCase()}
+                                                {senderName.charAt(0).toUpperCase()}
                                             </div>
                                         ) : (
                                             <div className="w-9 h-9" /> /* Spacer for grouped messages */
@@ -237,7 +242,7 @@ const Chat = () => {
                                     <div className="flex-1 min-w-0 pr-4">
                                         {showHeader && (
                                             <div className="flex items-baseline gap-2 mb-0.5">
-                                                <span className="text-[14px] font-semibold text-slate-100">{isMe ? 'You' : msg.senderName}</span>
+                                                <span className="text-[14px] font-semibold text-slate-100">{isMe ? 'You' : senderName}</span>
                                                 <span className="text-[11px] text-slate-400">{msg.time}</span>
                                             </div>
                                         )}
