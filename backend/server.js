@@ -21,6 +21,7 @@ const BASE_ORIGINS = [
     'http://localhost:5173',
     'http://localhost:3000',
     'https://spontaneous-cactus-3f64f7.netlify.app',
+    'https://singular-eclair-169995.netlify.app'
 ];
 
 const envOrigins = process.env.CLIENT_URL
