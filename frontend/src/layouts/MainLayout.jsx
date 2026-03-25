@@ -27,8 +27,12 @@ const MainLayout = () => {
         });
 
         socket.on('receive_message', (data) => {
-            if (location.pathname.includes('/chat')) return;
             if (data.senderId === user._id) return;
+            
+            if (location.pathname.includes('/chat') && window.currentChatChannel) {
+                if (data.room === window.currentChatChannel) return;
+                if (data.room === user._id && data.senderId === window.currentChatChannel) return;
+            }
             
             setNotifications(prev => [...prev, data]);
             setTimeout(() => {

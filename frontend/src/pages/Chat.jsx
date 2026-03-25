@@ -20,17 +20,35 @@ const Chat = () => {
 
         newSocket.on('connect', () => {
             newSocket.emit('join_room', activeChannel);
+            if (user?._id) {
+                newSocket.emit('join_room', user._id);
+            }
         });
 
         // Listen for incoming messages
         newSocket.on('receive_message', (data) => {
             setMessages((prev) => {
                 if (prev.some(m => m.id === data.id || m._id === data._id)) return prev;
-                return [...prev, data];
+                
+                // If it's a DM sent to us, only show if we are viewing the sender
+                if (data.room === user?._id) {
+                    if (data.senderId === activeChannel) return [...prev, data];
+                    return prev;
+                }
+
+                // If it's a group message, only show if we are viewing that group
+                if (data.room === activeChannel) return [...prev, data];
+                
+                return prev;
             });
         });
 
         return () => newSocket.close();
+    }, [activeChannel, user]);
+
+    useEffect(() => {
+        window.currentChatChannel = activeChannel;
+        return () => { window.currentChatChannel = null; };
     }, [activeChannel]);
 
     useEffect(() => {
