@@ -14,9 +14,16 @@ const Performance = () => {
     useEffect(() => {
         const fetchPerformanceData = async () => {
             try {
-                // Fetch all users to display performance
-                const res = await api.get('/users');
-                let usersList = res.data;
+                // Fetch required entities
+                const [usersRes, tasksRes, attRes] = await Promise.all([
+                    api.get('/users'),
+                    api.get('/tasks'),
+                    api.get('/attendance')
+                ]);
+
+                let usersList = usersRes.data;
+                const tasksList = tasksRes.data;
+                const attList = attRes.data;
 
                 // Role-based filtering
                 if (isAdmin) {
@@ -29,13 +36,30 @@ const Performance = () => {
                     usersList = usersList.filter(u => u._id === user._id);
                 }
 
-                // Append pseudo-randomized (but consistent) performance metrics 
-                // In a production environment, this would hit an aggregation endpoint
+                // Compute real performance metrics based on tasks and attendance 
                 const enhancedList = usersList.map(u => {
-                    const seed = u._id.charCodeAt(u._id.length - 1);
-                    const taskCompletion = Math.min(100, Math.max(0, 60 + (seed % 40)));
-                    const attendance = Math.min(100, Math.max(0, 75 + (seed % 25)));
-                    const punctuality = Math.min(100, Math.max(0, 70 + (seed % 30)));
+                    const uId = u._id;
+                    
+                    // Task Completion
+                    const userTasks = tasksList.filter(t => (t.assignedTo?._id || t.assignedTo) === uId);
+                    const taskCompletion = userTasks.length === 0 ? 100 : Math.round((userTasks.filter(t => t.status === 'Completed').length / userTasks.length) * 100);
+
+                    // Attendance 
+                    const userAtt = attList.filter(a => (a.user?._id || a.user) === uId);
+                    const attendance = userAtt.length === 0 ? 100 : Math.round((userAtt.filter(a => a.status === 'Present' || a.checkIn).length / userAtt.length) * 100);
+
+                    // Punctuality (Assuming 09:15 AM as threshold for late arrivals)
+                    let punctualDays = 0;
+                    userAtt.forEach(a => {
+                        if (a.checkIn) {
+                             const checkInDate = new Date(a.checkIn);
+                             if (checkInDate.getHours() < 9 || (checkInDate.getHours() === 9 && checkInDate.getMinutes() <= 15)) {
+                                 punctualDays++;
+                             }
+                        }
+                    });
+                    const punctuality = userAtt.length === 0 ? 100 : Math.round((punctualDays / userAtt.length) * 100);
+
                     const overallScore = Math.round((taskCompletion + attendance + punctuality) / 3);
 
                     let rating = '';

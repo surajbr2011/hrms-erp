@@ -57,7 +57,14 @@ const createUser = async (req, res) => {
 // @access  Private/Admin or Manager
 const getUsers = async (req, res) => {
     try {
-        const users = await User.find({})
+        let query = {};
+        if (req.user.role === 'Employee') {
+            query = { _id: req.user._id };
+        } else if (req.user.role === 'Manager') {
+            query = { $or: [{ role: 'Employee' }, { _id: req.user._id }] };
+        }
+
+        const users = await User.find(query)
             .populate('department', 'name')
             .populate('designation', 'title')
             .populate('reportingManager', 'name email')
