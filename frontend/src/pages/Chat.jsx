@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
-import { Send, Search, Image as ImageIcon, Paperclip, MoreVertical, Hash } from 'lucide-react';
+import { Send, Search, Image as ImageIcon, Paperclip, MoreVertical, Hash, X } from 'lucide-react';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
@@ -10,8 +10,10 @@ const Chat = () => {
     const socketRef = useRef(null);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
+    const [attachment, setAttachment] = useState(null);
     const [activeChannel, setActiveChannel] = useState('general');
     const messagesEndRef = useRef(null);
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         // Connect to socket
@@ -81,20 +83,42 @@ const Chat = () => {
 
     const handleSendMessage = async (e) => {
         e.preventDefault();
-        if (newMessage.trim() === '') return;
+        if (newMessage.trim() === '' && !attachment) return;
+
+        let uploadedFilePath = null;
+        if (attachment) {
+            const formData = new FormData();
+            formData.append('file', attachment);
+            try {
+                const { default: api } = await import('../services/api');
+                const uploadRes = await api.post('/upload', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                uploadedFilePath = uploadRes.data.filePath;
+            } catch (err) {
+                console.error("File upload failed", err);
+                alert("Attachment upload failed. Ensure the server accepts it and it is <5MB and is an image or pdf.");
+                return;
+            }
+        }
 
         const textToSend = newMessage;
         setNewMessage(''); // optimistic clear
+        setAttachment(null);
         
         try {
             const { default: api } = await import('../services/api');
-            const res = await api.post(`/chat/${activeChannel}/messages`, { text: textToSend });
+            const res = await api.post(`/chat/${activeChannel}/messages`, { 
+                text: textToSend || 'Sent an attachment',
+                attachments: uploadedFilePath ? [uploadedFilePath] : []
+            });
             
             const msgData = {
                 id: res.data._id,
                 _id: res.data._id,
                 room: activeChannel,
                 text: res.data.text,
+                attachments: res.data.attachments,
                 senderId: user?._id || '1',
                 senderName: user?.name?.split(' ')[0] || 'Me',
                 time: new Date(res.data.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -266,6 +290,21 @@ const Chat = () => {
                                         )}
                                         <div className="text-[14px] text-slate-300 leading-[1.4] whitespace-pre-wrap break-words">
                                             {msg.text}
+                                            {msg.attachments && msg.attachments.length > 0 && (
+                                                <div className="mt-2 space-y-2">
+                                                    {msg.attachments.map((att, i) => (
+                                                        <div key={i}>
+                                                            {att.match(/\.(jpeg|jpg|gif|png)$/i) ? (
+                                                                <img src={`${SOCKET_URL}${att}`} alt="attachment" className="max-w-[240px] max-h-[240px] rounded border border-slate-700 shadow-sm object-contain bg-slate-900" />
+                                                            ) : (
+                                                                <a href={`${SOCKET_URL}${att}`} download target="_blank" rel="noreferrer" className="text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 text-xs bg-slate-800 w-fit px-3 py-1.5 rounded-lg border border-slate-700/50">
+                                                                    <Paperclip size={14} /> View Document
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -276,7 +315,17 @@ const Chat = () => {
                 </div>
 
                 {/* Input Area */}
-                <div className="p-4 border-t border-slate-700/50 bg-slate-800/40 shrink-0">
+                <div className="p-4 border-t border-slate-700/50 bg-slate-800/40 shrink-0 relative">
+                    {/* Minimal Attachment Preview */}
+                    {attachment && (
+                        <div className="absolute top-[-44px] left-6 bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-t-lg bg-opacity-95 flex items-center gap-3 shadow-[0_-4px_10px_rgba(0,0,0,0.1)]">
+                            <span className="text-xs text-indigo-300 font-medium tracking-wide truncate max-w-[150px]">{attachment.name}</span>
+                            <button type="button" onClick={() => setAttachment(null)} className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-full p-0.5 transition-colors">
+                                <X size={14} />
+                            </button>
+                        </div>
+                    )}
+                    
                     <form onSubmit={handleSendMessage} className="flex relative items-end gap-2">
                         <div className="flex-1 relative">
                             <textarea
@@ -288,15 +337,30 @@ const Chat = () => {
                                         handleSendMessage(e);
                                     }
                                 }}
-                                placeholder={`Message #${activeChannel}...`}
-                                className="w-full bg-slate-900/60 border border-slate-700/60 rounded-xl py-3 pl-4 pr-24 text-white focus:outline-none focus:ring-2 focus:border-indigo-500 transition-all resize-none h-[52px] min-h-[52px] max-h-32 custom-scrollbar placeholder-slate-500"
+                                placeholder={`Message #${activeChatName}...`}
+                                className="w-full bg-slate-900/60 border border-slate-700/60 rounded-xl py-3 pl-4 pr-[104px] text-white focus:outline-none focus:ring-2 focus:border-indigo-500 transition-all resize-none h-[52px] min-h-[52px] max-h-32 custom-scrollbar placeholder-slate-500"
                                 rows="1"
                             />
-                            <div className="absolute right-2 bottom-3 flex gap-1">
-                                <button type="button" className="p-1.5 text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-slate-700">
+                            
+                            <input 
+                                type="file" 
+                                ref={fileInputRef} 
+                                style={{ display: 'none' }} 
+                                onChange={(e) => {
+                                    if (e.target.files && e.target.files[0]) {
+                                        if (e.target.files[0].size > 5242880) return alert("File max size is 5MB.");
+                                        setAttachment(e.target.files[0]);
+                                    }
+                                    e.target.value = '';
+                                }} 
+                                accept="image/jpeg,image/png,image/gif,application/pdf"
+                            />
+
+                            <div className="absolute right-2 bottom-2.5 flex gap-1">
+                                <button type="button" onClick={() => fileInputRef.current?.click()} className="p-1.5 text-slate-400 hover:text-indigo-400 transition-colors rounded-lg hover:bg-slate-800">
                                     <Paperclip size={18} />
                                 </button>
-                                <button type="button" className="p-1.5 text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-slate-700">
+                                <button type="button" onClick={() => fileInputRef.current?.click()} className="p-1.5 text-slate-400 hover:text-indigo-400 transition-colors rounded-lg hover:bg-slate-800">
                                     <ImageIcon size={18} />
                                 </button>
                             </div>
@@ -304,8 +368,8 @@ const Chat = () => {
 
                         <button
                             type="submit"
-                            disabled={newMessage.trim() === ''}
-                            className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white p-3.5 rounded-xl transition-colors shadow-lg shadow-indigo-500/20 shrink-0"
+                            disabled={newMessage.trim() === '' && !attachment}
+                            className={`bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white p-3.5 rounded-xl transition-colors shadow-lg shadow-indigo-500/20 shrink-0 ${attachment ? 'animate-pulse' : ''}`}
                         >
                             <Send size={18} className="translate-x-0.5" />
                         </button>
