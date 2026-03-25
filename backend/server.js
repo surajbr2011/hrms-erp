@@ -72,12 +72,19 @@ app.use((req, res, next) => {
 });
 
 // ─── Socket.io Events ────────────────────────────────────────────────────────
+const chatHistory = [];
+
 io.on('connection', (socket) => {
     socket.on('join_room', (room) => {
         socket.join(room);
+        const history = chatHistory.filter(m => m.room === room);
+        socket.emit('chat_history', history);
     });
 
     socket.on('send_message', (data) => {
+        chatHistory.push(data);
+        if (chatHistory.length > 2000) chatHistory.shift();
+        // Emits to everyone else in the room
         socket.to(data.room).emit('receive_message', data);
     });
 
@@ -92,6 +99,7 @@ app.get('/', (req, res) => res.json({ status: 'ok', message: 'HRMS API is runnin
 // ─── API Routes ───────────────────────────────────────────────────────────────
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/departments', require('./routes/departmentRoutes'));
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
 app.use('/api/leaves', require('./routes/leaveRoutes'));

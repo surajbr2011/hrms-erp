@@ -14,47 +14,78 @@ const Chat = () => {
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
-        // Connect to socket when component mounts
+        // Connect to socket
         const newSocket = io(SOCKET_URL);
         socketRef.current = newSocket;
 
-        // Initial setup
         newSocket.on('connect', () => {
-            console.log('Connected to chat server');
             newSocket.emit('join_room', activeChannel);
         });
 
         // Listen for incoming messages
         newSocket.on('receive_message', (data) => {
-            setMessages((prev) => [...prev, data]);
+            setMessages((prev) => {
+                if (prev.some(m => m.id === data.id || m._id === data._id)) return prev;
+                return [...prev, data];
+            });
         });
 
         return () => newSocket.close();
     }, [activeChannel]);
 
     useEffect(() => {
+        // Fetch DB history
+        import('../services/api').then(({ default: api }) => {
+            api.get(`/chat/${activeChannel}/messages`)
+                .then(res => {
+                    const mapped = res.data.map(m => ({
+                        id: m._id,
+                        _id: m._id,
+                        room: activeChannel,
+                        text: m.text,
+                        senderId: m.sender?._id || m.sender,
+                        senderName: m.sender?.name?.split(' ')[0] || 'Unknown',
+                        time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    }));
+                    setMessages(mapped);
+                })
+                .catch(err => console.error('Failed fetching chat history:', err));
+        });
+    }, [activeChannel]);
+
+    useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    const handleSendMessage = (e) => {
+    const handleSendMessage = async (e) => {
         e.preventDefault();
         if (newMessage.trim() === '') return;
 
-        const msgData = {
-            id: Date.now(),
-            room: activeChannel,
-            text: newMessage,
-            senderId: user?._id || '1',
-            senderName: user?.name?.split(' ')[0] || 'Me',
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        };
+        const textToSend = newMessage;
+        setNewMessage(''); // optimistic clear
+        
+        try {
+            const { default: api } = await import('../services/api');
+            const res = await api.post(`/chat/${activeChannel}/messages`, { text: textToSend });
+            
+            const msgData = {
+                id: res.data._id,
+                _id: res.data._id,
+                room: activeChannel,
+                text: res.data.text,
+                senderId: user?._id || '1',
+                senderName: user?.name?.split(' ')[0] || 'Me',
+                time: new Date(res.data.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            };
 
-        // Emit socket event
-        socketRef.current?.emit('send_message', msgData);
+            // Emit socket event to notify others
+            socketRef.current?.emit('send_message', msgData);
 
-        // Add locally immediately
-        setMessages((prev) => [...prev, msgData]);
-        setNewMessage('');
+            // Add locally immediately
+            setMessages((prev) => [...prev, msgData]);
+        } catch(err) {
+            console.error('Failed sending message:', err);
+        }
     };
 
     const channels = [
@@ -179,8 +210,8 @@ const Chat = () => {
                     </div>
                 </div>
 
-                {/* Messages List */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 custom-scrollbar bg-slate-900/20">
+                {/* Messages List - Microsoft Teams Style Flat Layout */}
+                <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-1 custom-scrollbar bg-[#1f1f1f]">
                     {messages.map((msg, idx) => {
                         const isMe = msg.senderId === (user?._id || '1');
                         const showHeader = idx === 0 || messages[idx - 1].senderId !== msg.senderId;
@@ -188,38 +219,37 @@ const Chat = () => {
                         return (
                             <div
                                 key={msg.id}
-                                className={`flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-200 ${isMe ? 'items-end' : 'items-start'}`}
+                                className={`flex flex-col animate-in fade-in duration-200 hover:bg-white/5 py-1 px-2 rounded-md ${!showHeader ? 'mt-0' : 'mt-4'}`}
                             >
-                                {showHeader && !isMe && (
-                                    <span className="text-xs text-slate-500 font-medium mb-1 ml-1">{msg.senderName}</span>
-                                )}
-
-                                <div className={`relative max-w-[80%] md:max-w-[70%] group flex items-end gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
-
-                                    {/* Avatar for others */}
-                                    {showHeader && !isMe && (
-                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-violet-500 to-indigo-500 shrink-0 text-white font-bold text-xs flex items-center justify-center self-end mb-1">
-                                            {msg.senderName.charAt(0)}
+                                <div className="flex items-start gap-3 w-full">
+                                    {/* Avatar Column */}
+                                    <div className="w-10 shrink-0 flex justify-center">
+                                        {showHeader ? (
+                                            <div className="w-9 h-9 rounded-full bg-indigo-600 shrink-0 text-white font-bold text-sm flex items-center justify-center shadow-sm">
+                                                {msg.senderName.charAt(0).toUpperCase()}
+                                            </div>
+                                        ) : (
+                                            <div className="w-9 h-9" /> /* Spacer for grouped messages */
+                                        )}
+                                    </div>
+                                    
+                                    {/* Content Column */}
+                                    <div className="flex-1 min-w-0 pr-4">
+                                        {showHeader && (
+                                            <div className="flex items-baseline gap-2 mb-0.5">
+                                                <span className="text-[14px] font-semibold text-slate-100">{isMe ? 'You' : msg.senderName}</span>
+                                                <span className="text-[11px] text-slate-400">{msg.time}</span>
+                                            </div>
+                                        )}
+                                        <div className="text-[14px] text-slate-300 leading-[1.4] whitespace-pre-wrap break-words">
+                                            {msg.text}
                                         </div>
-                                    )}
-                                    {!showHeader && !isMe && <div className="w-8 shrink-0" />}
-
-                                    <div className={`px-4 py-3 rounded-2xl shadow-sm relative ${isMe
-                                        ? 'bg-indigo-600 text-white rounded-br-sm'
-                                        : 'bg-slate-800 text-slate-200 border border-slate-700/50 rounded-bl-sm'
-                                        }`}>
-                                        <p className="text-sm leading-relaxed">{msg.text}</p>
-
-                                        {/* Timestamp */}
-                                        <span className={`text-[10px] block mt-1 opacity-70 ${isMe ? 'text-indigo-200 text-right' : 'text-slate-400'}`}>
-                                            {msg.time}
-                                        </span>
                                     </div>
                                 </div>
                             </div>
                         );
                     })}
-                    <div ref={messagesEndRef} />
+                    <div ref={messagesEndRef} className="h-4" />
                 </div>
 
                 {/* Input Area */}

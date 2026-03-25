@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { FileText, Download, Filter, FileSpreadsheet, FileIcon as FilePdf, CheckCircle, MessageSquare } from 'lucide-react';
@@ -16,13 +17,7 @@ const Reports = () => {
     const [loadingReports, setLoadingReports] = useState(false);
     const [filterDate, setFilterDate] = useState('');
 
-    useEffect(() => {
-        if (activeTab === 'daily') {
-            fetchDailyReports();
-        }
-    }, [activeTab, filterDate]);
-
-    const fetchDailyReports = async () => {
+    const fetchDailyReports = useCallback(async () => {
         setLoadingReports(true);
         try {
             const res = await api.get(`/daily-reports${filterDate ? `?date=${filterDate}` : ''}`);
@@ -31,7 +26,13 @@ const Reports = () => {
             console.error(err);
         }
         setLoadingReports(false);
-    };
+    }, [filterDate]);
+
+    useEffect(() => {
+        if (activeTab === 'daily') {
+            fetchDailyReports();
+        }
+    }, [activeTab, fetchDailyReports]);
 
     const handleUpdateStatus = async (id, status, comment) => {
         try {
@@ -49,13 +50,13 @@ const Reports = () => {
         setTimeout(() => {
             setIsLoading(false);
             const textToSave = `${reportType.toUpperCase()} Report - ${dateRange}\n\nGenerated for: ${user?.name}\nStatus: Completed\nAll metrics are looking good for this period.`;
-            const element = document.createElement("a");
-            const file = new Blob([textToSave], { type: 'text/plain' });
-            element.href = URL.createObjectURL(file);
-            element.download = `${reportType}_Report_${dateRange}.txt`;
-            document.body.appendChild(element);
-            element.click();
-            document.body.removeChild(element);
+            
+            import('jspdf').then(({ default: jsPDF }) => {
+                const doc = new jsPDF();
+                const lines = doc.splitTextToSize(textToSave, 180);
+                doc.text(lines, 10, 20);
+                doc.save(`${reportType}_Report_${dateRange}.pdf`);
+            });
         }, 1500);
     };
 

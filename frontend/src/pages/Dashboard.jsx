@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { Clock, Briefcase, Calendar as CalendarIcon, FileText, CheckCircle2, ChevronRight, Play, Square, Coffee } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -11,13 +12,27 @@ const Dashboard = () => {
     const [currentTime, setCurrentTime] = useState(new Date());
 
     // Timer State
-    const [isCheckedIn, setIsCheckedIn] = useState(false);
-    const [breakType, setBreakType] = useState(null);
-    const [workSeconds, setWorkSeconds] = useState(0);
-    const [breakSeconds, setBreakSeconds] = useState(0);
-    const [hasAlerted, setHasAlerted] = useState(false);
+    const [isCheckedIn, setIsCheckedIn] = useState(() => localStorage.getItem('dash_isCheckedIn') === 'true');
+    const [breakType, setBreakType] = useState(() => localStorage.getItem('dash_breakType') || null);
+    const [workSeconds, setWorkSeconds] = useState(() => parseInt(localStorage.getItem('dash_workSeconds')) || 0);
+    const [breakSeconds, setBreakSeconds] = useState(() => parseInt(localStorage.getItem('dash_breakSeconds')) || 0);
+    const [hasAlerted, setHasAlerted] = useState(() => localStorage.getItem('dash_hasAlerted') === 'true');
     const [showReportModal, setShowReportModal] = useState(false);
-    const [checkInTime, setCheckInTime] = useState(null);
+    const [checkInTime, setCheckInTime] = useState(() => {
+        const val = localStorage.getItem('dash_checkInTime');
+        return val ? new Date(val) : null;
+    });
+
+    useEffect(() => {
+        localStorage.setItem('dash_isCheckedIn', isCheckedIn);
+        if (breakType) localStorage.setItem('dash_breakType', breakType);
+        else localStorage.removeItem('dash_breakType');
+        localStorage.setItem('dash_workSeconds', workSeconds);
+        localStorage.setItem('dash_breakSeconds', breakSeconds);
+        localStorage.setItem('dash_hasAlerted', hasAlerted);
+        if (checkInTime) localStorage.setItem('dash_checkInTime', checkInTime.toISOString());
+        else localStorage.removeItem('dash_checkInTime');
+    }, [isCheckedIn, breakType, workSeconds, breakSeconds, hasAlerted, checkInTime]);
 
     const [tasks, setTasks] = useState([]);
 
@@ -65,10 +80,13 @@ const Dashboard = () => {
         return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     };
 
-    const handleCheckInOut = () => {
+    const handleCheckInOut = async () => {
         if (isCheckedIn) {
             setShowReportModal(true);
         } else {
+            try {
+                await api.post('/attendance/check-in');
+            } catch(err) { console.error(err); }
             setIsCheckedIn(true);
             setCheckInTime(new Date());
             setWorkSeconds(0);
@@ -81,19 +99,28 @@ const Dashboard = () => {
         setShowReportModal(false);
     };
 
-    const handleCheckOutSuccess = () => {
+    const handleCheckOutSuccess = async () => {
+        try {
+            await api.put('/attendance/check-out');
+        } catch(err) { console.error(err); }
         setShowReportModal(false);
         setIsCheckedIn(false);
         setBreakType(null);
     };
 
-    const toggleBreak = (type) => {
+    const toggleBreak = async (type) => {
         if (breakType) {
+            try {
+                await api.put('/attendance/break-end');
+            } catch(err) { console.error(err); }
             // Resume work
             setBreakType(null);
             setBreakSeconds(0);
             setHasAlerted(false);
         } else {
+            try {
+                await api.post('/attendance/break-start', { type });
+            } catch(err) { console.error(err); }
             // Start break
             setBreakType(type);
         }

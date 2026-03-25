@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { Calendar, Clock, CheckCircle, XCircle, Settings } from 'lucide-react';
@@ -16,14 +17,35 @@ const Leaves = () => {
     const [reason, setReason] = useState('');
     const [duration, setDuration] = useState('Full Day');
 
+    const [leaveHistory, setLeaveHistory] = useState([]);
+    const [teamLeaves, setTeamLeaves] = useState([]);
+
     useEffect(() => {
         if (activeTab === 'holidays' || activeTab === 'apply') {
             api.get('/holidays').then(res => setHolidays(res.data)).catch(console.error);
         }
-    }, [activeTab]);
+        if (activeTab === 'team' || activeTab === 'history') {
+            api.get('/leaves').then(res => {
+                if (user?.role === 'Admin' || user?.role === 'Manager') {
+                    setTeamLeaves(res.data);
+                    setLeaveHistory(res.data.filter(l => (l.user?._id || l.user) === user?._id));
+                } else {
+                    setLeaveHistory(res.data);
+                }
+            }).catch(console.error);
+        }
+    }, [activeTab, user]);
 
-    const leaveHistory = [];
-    const teamLeaves = [];
+    const handleUpdateStatus = async (id, status) => {
+        try {
+            await api.put(`/leaves/${id}`, { status });
+            // Refresh
+            const res = await api.get('/leaves');
+            setTeamLeaves(res.data);
+        } catch(err) {
+            console.error(err);
+        }
+    };
 
     const isDateHoliday = (dateString) => {
         const date = new Date(dateString);
@@ -200,6 +222,54 @@ const Leaves = () => {
                 )}
 
                 {/* ... other tabs would go here ... */}
+                {activeTab === 'history' && (
+                    <motion.div key="history" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }} className="glass-panel p-6">
+                        <h2 className="text-xl font-semibold text-white mb-6">My Leave History</h2>
+                        <div className="space-y-4">
+                            {leaveHistory.length === 0 ? <p className="text-slate-400">No leaves found.</p> : leaveHistory.map((l, i) => (
+                                <div key={i} className="glass-card p-4 border border-slate-700/50 flex justify-between items-center">
+                                    <div>
+                                        <p className="font-semibold text-white">{l.leaveType}</p>
+                                        <p className="text-sm text-slate-400">{new Date(l.startDate).toLocaleDateString()} to {new Date(l.endDate).toLocaleDateString()}</p>
+                                        <p className="text-xs text-slate-500 mt-1">{l.reason}</p>
+                                    </div>
+                                    <span className={`px-3 py-1 text-xs font-bold rounded-full ${l.status === 'Approved' ? 'bg-emerald-500/20 text-emerald-400' : l.status === 'Rejected' ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                                        {l.status || 'Pending'}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+
+                {activeTab === 'team' && (
+                    <motion.div key="team" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }} className="glass-panel p-6">
+                        <h2 className="text-xl font-semibold text-white mb-6">Team Leave Requests</h2>
+                        <div className="space-y-4">
+                            {teamLeaves.length === 0 ? <p className="text-slate-400">No requests found.</p> : teamLeaves.map((l, i) => (
+                                <div key={i} className="glass-card p-4 border border-slate-700/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                    <div>
+                                        <p className="font-semibold text-white">{l.user?.name || 'Unknown User'}</p>
+                                        <p className="text-sm text-indigo-300">{l.leaveType}</p>
+                                        <p className="text-xs text-slate-400">{new Date(l.startDate).toLocaleDateString()} to {new Date(l.endDate).toLocaleDateString()}</p>
+                                        <p className="text-xs text-slate-500 mt-1 italic">"{l.reason}"</p>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <span className={`px-3 py-1 text-xs font-bold rounded-full ${l.status === 'Approved' ? 'bg-emerald-500/20 text-emerald-400' : l.status === 'Rejected' ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                                            {l.status || 'Pending'}
+                                        </span>
+                                        {l.status !== 'Approved' && l.status !== 'Rejected' && (
+                                            <div className="flex gap-2">
+                                                <button onClick={() => handleUpdateStatus(l._id, 'Approved')} className="p-2 border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-lg"><CheckCircle size={16} /></button>
+                                                <button onClick={() => handleUpdateStatus(l._id, 'Rejected')} className="p-2 border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 rounded-lg"><XCircle size={16} /></button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
 
             </AnimatePresence>
         </div>
