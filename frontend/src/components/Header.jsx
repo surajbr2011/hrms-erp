@@ -85,8 +85,8 @@ const Header = ({ onMenuClick }) => {
                 setOpen(false);
             }
         };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
+        document.addEventListener('click', handler);
+        return () => document.removeEventListener('click', handler);
     }, []);
 
     const handleMarkAsRead = async (id) => {
@@ -148,7 +148,11 @@ const Header = ({ onMenuClick }) => {
                 <div className="relative">
                     <button
                         ref={bellRef}
-                        onClick={() => setOpen(prev => !prev)}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setOpen((prev) => !prev);
+                        }}
                         className="relative p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 transition-colors border border-slate-700/50 shadow-sm"
                     >
                         <Bell size={20} />
