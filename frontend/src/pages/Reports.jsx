@@ -43,7 +43,7 @@ const Reports = () => {
         }
     };
 
-    const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+    const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || `http://${window.location.hostname}:5000`;
 
     const handleGenerate = () => {
         setIsLoading(true);

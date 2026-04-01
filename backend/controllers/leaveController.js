@@ -1,5 +1,6 @@
 const Leave = require('../models/Leave');
-const Notification = require('../models/Notification'); // Optional: for triggering alerts on apply/update
+const Notification = require('../models/Notification');
+const User = require('../models/User');
 
 // @desc    Get all leaves (Employee sees own, Manager sees department/own, Admin sees all)
 // @route   GET /api/leaves
@@ -36,6 +37,20 @@ const applyLeave = async (req, res) => {
         });
 
         const createdLeave = await leave.save();
+
+        // Notify all Admins & Managers about the new leave request
+        const managers = await User.find({ role: { $in: ['Admin', 'Manager'] } }).select('_id');
+        const notifPromises = managers.map(m =>
+            Notification.create({
+                title: 'New Leave Request',
+                message: `${req.user.name} has applied for ${leaveType} leave from ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()}.`,
+                type: 'Leave',
+                recipient: m._id,
+                link: '/leaves'
+            })
+        );
+        await Promise.all(notifPromises);
+
         res.status(201).json(createdLeave);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -60,6 +75,18 @@ const updateLeaveStatus = async (req, res) => {
             };
 
             const updatedLeave = await leave.save();
+
+            // Notify the employee whose leave was actioned
+            await Notification.create({
+                title: `Leave Request ${status}`,
+                message: `Your ${updatedLeave.leaveType} leave request has been ${status.toLowerCase()}.${
+                    comment ? ` Comment: ${comment}` : ''
+                }`,
+                type: 'Leave',
+                recipient: updatedLeave.user,
+                link: '/leaves'
+            });
+
             res.json(updatedLeave);
         } else {
             res.status(404).json({ message: 'Leave request not found' });

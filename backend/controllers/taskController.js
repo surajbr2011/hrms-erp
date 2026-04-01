@@ -1,5 +1,6 @@
 const Task = require('../models/Task');
 const TaskComment = require('../models/TaskComment');
+const Notification = require('../models/Notification');
 
 // @desc    Get all tasks for a user or team
 // @route   GET /api/tasks
@@ -43,7 +44,16 @@ const createTask = async (req, res) => {
 
         const createdTask = await task.save();
 
-        // Optionally create Notification here
+        // Create notification for the assigned user
+        if (assignedTo) {
+            await Notification.create({
+                title: 'New Task Assigned',
+                message: `You have been assigned a new task: "${title}"`,
+                type: 'Task',
+                recipient: assignedTo,
+                link: '/tasks'
+            });
+        }
 
         res.status(201).json(createdTask);
     } catch (error) {
@@ -75,6 +85,19 @@ const updateTask = async (req, res) => {
             }
 
             const updatedTask = await task.save();
+
+            // Notify task creator when employee updates status
+            if (req.body.status && task.assignedBy &&
+                req.user._id.toString() !== task.assignedBy.toString()) {
+                await Notification.create({
+                    title: 'Task Status Updated',
+                    message: `Task "${updatedTask.title}" status changed to "${req.body.status}"`,
+                    type: 'Task',
+                    recipient: task.assignedBy,
+                    link: '/tasks'
+                });
+            }
+
             res.json(updatedTask);
         } else {
             res.status(404).json({ message: 'Task not found' });

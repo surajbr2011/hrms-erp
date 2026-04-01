@@ -32,13 +32,8 @@ const allowedOrigins = [...new Set([...BASE_ORIGINS, ...envOrigins])];
 
 const corsOptions = {
     origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, curl, Render health checks)
-        if (!origin) return callback(null, true);
-        // Allow any *.netlify.app deploy preview
-        if (/^https:\/\/[a-z0-9-]+\.netlify\.app$/.test(origin)) return callback(null, true);
-        if (allowedOrigins.includes(origin)) return callback(null, true);
-        console.warn(`CORS blocked origin: ${origin}`);
-        callback(new Error(`CORS blocked: ${origin}`));
+        // Allow ANY IP and origin to bypass CORS restrictions
+        return callback(null, true);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -54,7 +49,10 @@ app.use(cors(corsOptions));
 // ─── Socket.io ───────────────────────────────────────────────────────────────
 const io = new Server(server, {
     cors: {
-        origin: allowedOrigins,
+        origin: (origin, callback) => {
+            // Allow ANY origin for socket connections
+            return callback(null, true);
+        },
         methods: ['GET', 'POST'],
         credentials: true,
     },
@@ -111,6 +109,7 @@ app.use('/api/payroll', require('./routes/payrollRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
 app.use('/api/daily-reports', require('./routes/dailyReportRoutes'));
 app.use('/api/holidays', require('./routes/holidayRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
 
 // ─── Static Uploads ───────────────────────────────────────────────────────────
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

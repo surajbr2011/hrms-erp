@@ -6,7 +6,7 @@ import { MessageSquare, X } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || `http://${window.location.hostname}:5000`;
 
 const MainLayout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);

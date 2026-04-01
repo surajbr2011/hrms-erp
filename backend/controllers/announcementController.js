@@ -1,4 +1,5 @@
 const Announcement = require('../models/Announcement');
+const Notification = require('../models/Notification');
 
 // @desc    Get all announcements
 // @route   GET /api/announcements
@@ -38,6 +39,16 @@ const createAnnouncement = async (req, res) => {
             targetRole: targetRole || null,
             type: type || 'Info',
             scheduledDate: scheduledDate || new Date()
+        });
+
+        // Create a matching global / department notification
+        await Notification.create({
+            title: `📢 ${title}`,
+            message: description,
+            type: 'Announcement',
+            recipient: null,  // null = visible to all / global
+            department: targetDepartment || null,
+            link: '/dashboard'
         });
 
         res.status(201).json(announcement);
