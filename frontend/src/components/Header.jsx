@@ -116,6 +116,17 @@ const Header = ({ onMenuClick }) => {
         } catch { /* silently fail */ }
     };
 
+    const handleSeedTest = async () => {
+        try {
+            await api.post('/notifications/test', {
+                title: '🔔 Test Notification',
+                message: 'Notification system is working correctly!',
+                type: 'System'
+            });
+            await fetchNotifications();
+            await fetchUnreadCount();
+        } catch { /* silently fail */ }
+    };
 
     return (
         <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-4 md:px-6 lg:px-8 glass-panel m-4 mt-4 bg-slate-800/60 shadow-md backdrop-blur-md rounded-2xl border border-indigo-500/20">
@@ -209,10 +220,16 @@ const Header = ({ onMenuClick }) => {
                                         Loading...
                                     </div>
                                 ) : notifications.length === 0 ? (
-                                    <div className="py-14 text-center">
+                                    <div className="py-12 text-center">
                                         <div className="text-4xl mb-2">🔔</div>
                                         <p className="text-slate-400 text-sm">You're all caught up!</p>
                                         <p className="text-slate-600 text-xs mt-1">No notifications yet</p>
+                                        <button
+                                            onClick={handleSeedTest}
+                                            className="mt-3 px-3 py-1.5 text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-lg hover:bg-indigo-500/30 transition-colors"
+                                        >
+                                            Send test notification
+                                        </button>
                                     </div>
                                 ) : (
                                     notifications.map(n => (

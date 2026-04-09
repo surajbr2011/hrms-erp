@@ -5,13 +5,7 @@ const Notification = require('../models/Notification');
 // @access  Private
 const getNotifications = async (req, res) => {
     try {
-        const notifications = await Notification.find({
-            $or: [
-                { recipient: req.user._id },           // Personal notification
-                { recipient: null, department: null },  // Global (all users)
-                { recipient: null, department: req.user.department } // Department-wide
-            ]
-        })
+        const notifications = await Notification.find({ recipient: req.user._id })
             .sort({ createdAt: -1 })
             .limit(50);
 
@@ -27,12 +21,8 @@ const getNotifications = async (req, res) => {
 const getUnreadCount = async (req, res) => {
     try {
         const count = await Notification.countDocuments({
-            isRead: false,
-            $or: [
-                { recipient: req.user._id },
-                { recipient: null, department: null },
-                { recipient: null, department: req.user.department }
-            ]
+            recipient: req.user._id,
+            isRead: false
         });
         res.json({ count });
     } catch (error) {
@@ -63,14 +53,7 @@ const markAsRead = async (req, res) => {
 const markAllAsRead = async (req, res) => {
     try {
         await Notification.updateMany(
-            {
-                isRead: false,
-                $or: [
-                    { recipient: req.user._id },
-                    { recipient: null, department: null },
-                    { recipient: null, department: req.user.department }
-                ]
-            },
+            { recipient: req.user._id, isRead: false },
             { $set: { isRead: true } }
         );
         res.json({ message: 'All notifications marked as read' });
@@ -91,10 +74,29 @@ const deleteNotification = async (req, res) => {
     }
 };
 
+// @desc    Create a test notification for the logged-in user (dev/debug only)
+// @route   POST /api/notifications/test
+// @access  Private
+const createTestNotification = async (req, res) => {
+    try {
+        const notif = await Notification.create({
+            title: req.body.title || '🔔 Test Notification',
+            message: req.body.message || 'This is a test notification to verify the system works.',
+            type: req.body.type || 'System',
+            recipient: req.user._id,
+            link: '/dashboard'
+        });
+        res.status(201).json(notif);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     getNotifications,
     getUnreadCount,
     markAsRead,
     markAllAsRead,
-    deleteNotification
+    deleteNotification,
+    createTestNotification
 };

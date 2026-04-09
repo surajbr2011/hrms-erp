@@ -1,5 +1,6 @@
 const Announcement = require('../models/Announcement');
 const Notification = require('../models/Notification');
+const User = require('../models/User');
 
 // @desc    Get all announcements
 // @route   GET /api/announcements
@@ -41,15 +42,23 @@ const createAnnouncement = async (req, res) => {
             scheduledDate: scheduledDate || new Date()
         });
 
-        // Create a matching global / department notification
-        await Notification.create({
-            title: `📢 ${title}`,
-            message: description,
-            type: 'Announcement',
-            recipient: null,  // null = visible to all / global
-            department: targetDepartment || null,
-            link: '/dashboard'
-        });
+        // Fan-out individual notifications to each targeted user
+        // Build user query based on targetDepartment and/or targetRole
+        const userQuery = { status: 'Active' };
+        if (targetDepartment) userQuery.department = targetDepartment;
+        if (targetRole) userQuery.role = targetRole;
+
+        const targetUsers = await User.find(userQuery).select('_id');
+        if (targetUsers.length > 0) {
+            const notifDocs = targetUsers.map(u => ({
+                title: `📢 ${title}`,
+                message: description,
+                type: 'Announcement',
+                recipient: u._id,
+                link: '/announcements'
+            }));
+            await Notification.insertMany(notifDocs);
+        }
 
         res.status(201).json(announcement);
     } catch (error) {
