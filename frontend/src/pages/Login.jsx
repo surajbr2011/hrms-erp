@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { motion } from 'framer-motion';
 import { LogIn, User, Lock, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -32,12 +31,7 @@ const Login = () => {
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-600/20 blur-[120px]" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-violet-600/20 blur-[120px]" />
 
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="w-full max-w-md p-8 glass-panel z-10"
-            >
+            <div className="w-full max-w-md p-8 glass-panel z-10">
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30 mb-6">
                         <User size={32} />
@@ -103,11 +97,7 @@ const Login = () => {
                         )}
                     </button>
                 </form>
-
-                <p className="mt-8 text-center text-sm text-slate-500">
-                    Demo: Use <span className="text-indigo-400">admin@</span> / <span className="text-indigo-400">manager@</span> / <span className="text-indigo-400">employee@</span>
-                </p>
-            </motion.div>
+            </div>
         </div>
     );
 };
