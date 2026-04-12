@@ -3,10 +3,6 @@
   command = "npm run build"
   publish = "dist"
 
-[build.environment]
-  VITE_API_URL = "http://13.232.14.120:5000/api"
-  VITE_SOCKET_URL = "http://13.232.14.120:5000"
-
 [[redirects]]
   from = "/*"
   to = "/index.html"
